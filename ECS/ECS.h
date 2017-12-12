@@ -6,6 +6,9 @@ namespace ECS
 {
 
 typedef size_t EntityID;
+// the ComponentMask is used to deciate
+// which type of
+typedef uint32_t ComponentMask;
 
 log4cplus::Logger gECSLogger;
 const std::string gLoggerLayout = "%d{%m/%d/%y %H:%M:%S} -%m[%l]%n";
