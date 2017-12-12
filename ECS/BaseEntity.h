@@ -12,9 +12,16 @@ public:
 	~BaseEntity();
 
 	EntityID getID();
+	
+	void addComponent(BaseComponent * component);
+	void removeComponent(BaseComponent * removedComponent);
 
 private:
 	EntityID _id;
+
+	// mask to dicate which type of component it have.
+	ComponentMask _cmpMask;
+	
 	std::vector<BaseComponent*> _components;
 };
 
