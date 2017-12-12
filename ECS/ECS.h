@@ -6,7 +6,7 @@ namespace ECS
 {
 
 typedef size_t EntityID;
-// the ComponentMask is used to deciate
+// the ComponentMask is used to dicate
 // which type of
 typedef uint32_t ComponentMask;
 
