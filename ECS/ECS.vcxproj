@@ -114,11 +114,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BaseComponent.h" />
+    <ClInclude Include="BaseEntity.h" />
+    <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
+    <ClInclude Include="EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseComponent.cpp" />
+    <ClCompile Include="BaseEntity.cpp" />
+    <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="ECS.cpp" />
+    <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
