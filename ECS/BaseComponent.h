@@ -10,6 +10,8 @@ public:
 	BaseComponent();
 	~BaseComponent();
 
+	virtual ComponentMask getComponentMask();
+
 private:
 	EntityID _entityID;
 };
