@@ -2,15 +2,14 @@
 
 
 #include <log4cplus\logger.h>
+#include <MyTools\MyAssert.h>
+#pragma comment(lib, "log4cplusD.lib")
+#pragma comment(lib, "ECS.lib")
 namespace ECS
 {
-
 typedef size_t EntityID;
-// the ComponentMask is used to dicate
-// which type of
-typedef uint32_t ComponentMask;
 
-log4cplus::Logger gECSLogger;
+extern log4cplus::Logger gECSLogger;
 const std::string gLoggerLayout = "%d{%m/%d/%y %H:%M:%S} -%m[%l]%n";
 
 // starup the ECS
