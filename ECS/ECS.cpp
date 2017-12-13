@@ -6,6 +6,8 @@
 
 namespace ECS
 {
+
+log4cplus::Logger gECSLogger;
 int init()
 {
 	// prepare the logger.
