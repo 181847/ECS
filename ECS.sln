@@ -4,10 +4,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ECS", "ECS\ECS.vcxproj", "{CA9DEFD2-DD65-4D3F-A90A-D08E874D1E94}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D} = {6011DD5A-AAAD-451E-927A-65C4D5DB252D}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testUnit", "testUnit", "{CD6E31DD-00E6-4709-8762-366B1C126C63}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testLog4cplus", "testLog4cplus\testLog4cplus.vcxproj", "{C02F26A9-F60B-409A-A2F4-41EEF60EE819}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestEntityManager", "TestEntityManager\TestEntityManager.vcxproj", "{84948CB8-F89F-4116-A766-F94C89C56446}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CA9DEFD2-DD65-4D3F-A90A-D08E874D1E94} = {CA9DEFD2-DD65-4D3F-A90A-D08E874D1E94}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Allocators", "..\Allocator\Allocators\Allocators.vcxproj", "{6011DD5A-AAAD-451E-927A-65C4D5DB252D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponentManager", "TestComponentManager\TestComponentManager.vcxproj", "{B2CD6682-02C0-491B-BE60-AF25609E781D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CA9DEFD2-DD65-4D3F-A90A-D08E874D1E94} = {CA9DEFD2-DD65-4D3F-A90A-D08E874D1E94}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,11 +48,37 @@ Global
 		{C02F26A9-F60B-409A-A2F4-41EEF60EE819}.Release|x64.Build.0 = Release|x64
 		{C02F26A9-F60B-409A-A2F4-41EEF60EE819}.Release|x86.ActiveCfg = Release|Win32
 		{C02F26A9-F60B-409A-A2F4-41EEF60EE819}.Release|x86.Build.0 = Release|Win32
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Debug|x64.ActiveCfg = Debug|x64
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Debug|x64.Build.0 = Debug|x64
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Debug|x86.ActiveCfg = Debug|Win32
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Debug|x86.Build.0 = Debug|Win32
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Release|x64.ActiveCfg = Release|x64
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Release|x64.Build.0 = Release|x64
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Release|x86.ActiveCfg = Release|Win32
+		{84948CB8-F89F-4116-A766-F94C89C56446}.Release|x86.Build.0 = Release|Win32
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Debug|x64.ActiveCfg = Debug|x64
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Debug|x64.Build.0 = Debug|x64
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Debug|x86.ActiveCfg = Debug|Win32
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Debug|x86.Build.0 = Debug|Win32
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Release|x64.ActiveCfg = Release|x64
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Release|x64.Build.0 = Release|x64
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Release|x86.ActiveCfg = Release|Win32
+		{6011DD5A-AAAD-451E-927A-65C4D5DB252D}.Release|x86.Build.0 = Release|Win32
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Debug|x64.ActiveCfg = Debug|x64
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Debug|x64.Build.0 = Debug|x64
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Debug|x86.ActiveCfg = Debug|Win32
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Debug|x86.Build.0 = Debug|Win32
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Release|x64.ActiveCfg = Release|x64
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Release|x64.Build.0 = Release|x64
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Release|x86.ActiveCfg = Release|Win32
+		{B2CD6682-02C0-491B-BE60-AF25609E781D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C02F26A9-F60B-409A-A2F4-41EEF60EE819} = {CD6E31DD-00E6-4709-8762-366B1C126C63}
+		{84948CB8-F89F-4116-A766-F94C89C56446} = {CD6E31DD-00E6-4709-8762-366B1C126C63}
+		{B2CD6682-02C0-491B-BE60-AF25609E781D} = {CD6E31DD-00E6-4709-8762-366B1C126C63}
 	EndGlobalSection
 EndGlobal
