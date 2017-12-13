@@ -18,13 +18,7 @@
     <ClCompile Include="ECS.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BaseComponent.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ComponentManager.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseEntity.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="EntityManager.cpp">
@@ -35,13 +29,7 @@
     <ClInclude Include="ECS.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BaseComponent.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ComponentManager.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseEntity.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="EntityManager.h">
