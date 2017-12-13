@@ -71,12 +71,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)/deps/include/;D:\GitHub\C_C++\Library;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/deps/lib/;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>TOGGLE_ALL_DEBUG_MESSAGE;USE_SYS_ASSERT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -113,16 +115,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BaseComponent.h" />
-    <ClInclude Include="BaseEntity.h" />
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
     <ClInclude Include="EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BaseComponent.cpp" />
-    <ClCompile Include="BaseEntity.cpp" />
-    <ClCompile Include="ComponentManager.cpp" />
     <ClCompile Include="ECS.cpp" />
     <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
