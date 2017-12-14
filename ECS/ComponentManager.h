@@ -1,6 +1,7 @@
 #pragma once
 #include "ECS.h"
 #include <MyTools\TypeTool.h>
+#include <unordered_map>
 
 namespace ECS
 {
@@ -20,7 +21,6 @@ public:
 	~ComponentManager();
 
 	template<typename ...CONSTRUCT_ARGS>
-	
 	COMPONENT_TYPE *  newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
 	//bool removeComponent(EntityID removedID);
 
@@ -45,7 +45,7 @@ template<typename ...CONSTRUCT_ARGS>
 inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
 {
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<COMPONENT_TYPE>(args)...);
-	_lookUpTable[EntityID] = pNewComp;
+	_lookUpTable[entityID] = pNewComp;
 }
 
 }// namespace ECS
