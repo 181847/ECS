@@ -90,35 +90,43 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 		operationFlag |= 8;
 	}
 
+
+	// comment notice
+	// /\:				nullptr
+	// -|-|:			the pointer point to some block
+	// pointerA \_/ destoriedID:  
+	//					there is a gap between pointerA's block and the destoriedID
+	// pointerA -> destoriedID:  
+	//					the pointerA's block concatenate the destoriedID
 	switch(operationFlag)
 	{
 		// prev /\  curr /\, empty list
 	case (1 | 4):
-		// prev /\ , curr-|-|, prev |-| dest |-| curr
+		// prev /\ , curr-|-|, prev\_/ dest\_/ curr
 	case 1:
 		_freeList = new EntityFreeBlock();
 		_freeList->start = _freeList->end = destoriedID;
 		_freeList->next = curr;
 		break;
 
-		// prev /\  curr-|-|, prev |-| dest<-curr
+		// prev /\  curr-|-|, prev\_/ dest<-curr
 	case (1 | 8):
-		// prev-|-|, curr-|-|, prev |-| dest<-curr
+		// prev-|-|, curr-|-|, prev\_/ dest<-curr
 	case 8:
 		// add destoreidID to the curr block.
 		curr->start = destoriedID;
 		break;
 
-		// prev-|-|, curr /\, prev -> dest |-| curr
+		// prev-|-|, curr /\, prev -> dest\_/ curr
 	case (4 | 2):
-		// prev-|-|, curr-|-|, prev -> dest |-| curr
+		// prev-|-|, curr-|-|, prev -> dest\_/ curr
 	case 2:
 		prev->end = destoriedID;
 		break;
 
-		// prev-|-|, curr /\, prev |-| dest |-| curr
+		// prev-|-|, curr /\, prev\_/ dest\_/ curr
 	case 4:
-		// prev-|-|, curr-|-|, prev |-| dest |-| curr
+		// prev-|-|, curr-|-|, prev\_/ dest\_/ curr
 	case 0:
 		newBlock = new EntityFreeBlock();
 		newBlock->start = newBlock->end = destoriedID;
@@ -142,13 +150,13 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	return true;
 }
 
-size_t EntityManager::getSize()
+size_t EntityManager::getSize() const
 {
 	// the zero is a invalid ID.
 	return maxEntityCount - 1;
 }
 
-size_t EntityManager::getUsedIDCount()
+size_t EntityManager::getUsedIDCount() const
 {
 	return _usedID;
 }
