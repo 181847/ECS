@@ -100,7 +100,9 @@ namespace TestUnit
 
 	void AddTestUnit()
 	{
-		TEST_UNIT_START("always success test unit")
+		// test errorLogger, this is not the test about ComponentManager.
+		{
+		TEST_UNIT_START("test errorLogger, this is not the test about ComponentManager.")
 			int error = 0;
 
 			error += NOT_EQ(0, errorLogger.getErrorCount());
@@ -128,7 +130,10 @@ namespace TestUnit
 			
 			return EQ(0, error);
 		TEST_UNIT_END;
+		}
 
+		// create a ComponentManager with TestStructA
+		{
 		TEST_UNIT_START("create a ComponentManager with TestStructA")
 			int error = 0;
 			DeclareEntityManager(etManager);
@@ -149,7 +154,10 @@ namespace TestUnit
 
 			return error == 0;
 		TEST_UNIT_END;
+		}
 
+		// get component from ComponentManager 
+		{
 		TEST_UNIT_START("get component from ComponentManager")
 			DeclareEntityManager(etManager);
 			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
@@ -172,7 +180,36 @@ namespace TestUnit
 
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
+		}
+		
+		// get component from ComponentManager using the operator []
+		{
+		TEST_UNIT_START("get component from ComponentManager using the operator []")
+			DeclareEntityManager(etManager);
+			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
 
+			std::vector<ECS::EntityID> idList;
+			const size_t entityCount = 6;
+			errorLogger += newEntitis(etManager, &idList, entityCount);
+			std::vector<TestStructA*> componentList;
+
+
+			errorLogger += newComponents(tacManager, idList, &componentList);
+
+			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
+			{
+				auto id = idList[idIndex];
+				errorLogger += NOT_EQ(tacManager[id], componentList[idIndex]);
+			}
+
+			errorLogger += destoryEntities(etManager, &idList);
+
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+		}
+
+		// can pass the argument to the component constructor?
+		{
 		TEST_UNIT_START("can pass the argument to the component constructor?")
 			DeclareEntityManager(etManager);
 			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
@@ -218,6 +255,7 @@ namespace TestUnit
 
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
+		}
 	}
 }
 
