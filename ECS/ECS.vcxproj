@@ -115,11 +115,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BaseComponent.h" />
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
     <ClInclude Include="EntityManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BaseComponent.cpp" />
     <ClCompile Include="ECS.cpp" />
     <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
