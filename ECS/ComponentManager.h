@@ -85,7 +85,7 @@ inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::operator[](EntityID en
 template<typename COMPONENT_TYPE>
 inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID)
 {
-	auto iterCmp = _lookUpTable.find(entityID);
+	auto iterCmp = _lookUpTable.find(removedID);
 	if (iterCmp == _lookUpTable.end())
 	{
 		return false;
