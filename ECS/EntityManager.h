@@ -19,7 +19,8 @@ class EntityManager
 	// be ware that the EntityID '0' means invalid Entity,
 	static const size_t maxEntityCount = 1024;
 
-	// the EntityFreeBlock is used to indicate 
+	// the EntityFreeBlock is used to store the free entity ID,
+	// all the avaliable id are storey between the EntityFreBlock.start~end.
 	// which entityID can be used .
 	typedef struct EntityFreeBlock
 	{
@@ -38,9 +39,9 @@ public:
 	// destory the Entity.
 	bool destoryEntity(EntityID destoriedID);
 
-	size_t getSize();
+	size_t getSize() const;
 
-	size_t getUsedIDCount();
+	size_t getUsedIDCount() const;
 private:
 	EntityManager();
 	~EntityManager();
