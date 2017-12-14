@@ -15,7 +15,7 @@ namespace ECS
 class EntityManager
 {
 	// be ware that the EntityID '0' means invalid Entity,
-	static const size_t maxEntityCount = 1024;
+	static const size_t maxEntityCount = 2048;
 
 	// the EntityFreeBlock is used to store the free entity ID,
 	// all the avaliable id are storey between the EntityFreBlock.start~end.
