@@ -69,11 +69,12 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	{
 		operationFlag |= 1;
 	}
-	else if (prev->end > destoriedID)
+	else if (prev->end >= destoriedID)
 	{
 		// this is a error,
 		// it means that the caller is trying to destory the id
 		// which is still in the freeBlock.
+		// More detail can be found in the 'EntityManager::isValid(EntityID)'
 		return false;
 	}
 	else if ((prev->end + 1) == destoriedID)
@@ -181,13 +182,13 @@ bool EntityManager::isValid(EntityID checkID)
 	//|-----------|			null OR	|-----------|
 	//|start   end|					|start   end|
 	//|-----------|					|-----------|
-	//	   /\
-	//	   |
-	//	   |
+	//	   /\   /|
+	//	   |OR /
+	//	   |  /
 	//	checkID
 
 	unsigned char operationFlag = 0;
-	if (prev != nullptr && (prev->end) > checkID)
+	if (prev != nullptr && (prev->end) >= checkID)
 	{
 		// this is a error,
 		// it means that the caller is trying to destory the id
