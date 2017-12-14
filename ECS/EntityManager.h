@@ -14,8 +14,6 @@ namespace ECS
 // you can access the component through ComponentManager with the EntityID.
 class EntityManager
 {
-
-	using ComponentMask = std::bitset<32>;
 	// be ware that the EntityID '0' means invalid Entity,
 	static const size_t maxEntityCount = 1024;
 
