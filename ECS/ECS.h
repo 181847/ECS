@@ -1,10 +1,12 @@
 #pragma once
 
-
+#include <bitset>
 #include <log4cplus\logger.h>
 #include <MyTools\MyAssert.h>
+
 #pragma comment(lib, "log4cplusD.lib")
 #pragma comment(lib, "ECS.lib")
+
 namespace ECS
 {
 	// global logger
