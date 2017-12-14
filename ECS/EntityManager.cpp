@@ -69,6 +69,13 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	{
 		operationFlag |= 1;
 	}
+	else if (prev->end > destoriedID)
+	{
+		// this is a error,
+		// it means that the caller is trying to destory the id
+		// that hasn't benn allocate.
+		return false;
+	}
 	else if ((prev->end + 1) == destoriedID)
 	{
 		operationFlag |= 2;
@@ -87,9 +94,11 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	{
 		// prev /\  curr /\, empty list
 	case (1 | 4):
+		// prev /\ , curr-|-|, prev |-| dest |-| curr
+	case 1:
 		_freeList = new EntityFreeBlock();
 		_freeList->start = _freeList->end = destoriedID;
-		_freeList->next = nullptr;
+		_freeList->next = curr;
 		break;
 
 		// prev /\  curr-|-|, prev |-| dest<-curr
@@ -98,16 +107,6 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	case 8:
 		// add destoreidID to the curr block.
 		curr->start = destoriedID;
-		break;
-
-		// prev /\ , curr-|-|, prev |-| dest |-| curr
-	case 1:
-		// inser in front of the list head,
-		// change the _freeList.
-		_freeList = new EntityFreeBlock();
-		_freeList->start = _freeList->end = destoriedID;
-		// concat the new block
-		_freeList->next = curr;
 		break;
 
 		// prev-|-|, curr /\, prev -> dest |-| curr
