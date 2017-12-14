@@ -3,6 +3,7 @@
 #include <bitset>
 #include <log4cplus\logger.h>
 #include <MyTools\MyAssert.h>
+#include <MyTools\TypeTool.h>
 
 #pragma comment(lib, "log4cplusD.lib")
 #pragma comment(lib, "ECS.lib")
@@ -19,6 +20,13 @@ static const size_t gMaxComponentTypeCount	= 32;
 using EntityID			= size_t;
 using ComponentTypeID	= size_t;
 using ComponentMask		= std::bitset<gMaxComponentTypeCount>;
+
+
+// this struct have no memeber, 
+// its main goal is to generat the unique number
+// for each COMPONENT_TYPE.
+struct ComponetTypeIDSeed {};
+using ComponentIDGenerator =  TypeTool::IDGenerator<ComponetTypeIDSeed>;
 
 	// starup the ECS
 int init();
