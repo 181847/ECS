@@ -10,28 +10,39 @@
 
 DECLARE_TEST_UNITS;
 
-const int gComponentMaxSize = 64;
+const int gComponentMaxSize = 1024;
 #define DeclareComponentManager(managerName, ComponentType, MaxSize)\
 	ECS::ComponentManager<ComponentType> managerName(MaxSize)
 
 #define DeclareEntityManager(managerName)\
 	ECS::EntityManager* managerName = ECS::EntityManager::getInstance()
 
-
 struct TestStructA
 	:public ECS::BaseComponent
 {
+
+	static int deconstructCount;
 public:
 	int dataA;
 	float dataB;
 	TestStructA() :dataA(1), dataB(2.222f) {}
 	TestStructA(int initDataA, float initDataB)
 		:dataA(initDataA), dataB(initDataB){}
+	~TestStructA()
+	{
+		// add one to the deconstructCount
+		++deconstructCount;
+	}
 };
+
+int TestStructA::deconstructCount = 0;
 
 // get batch Entities,
 // return errors count, (if no error, return 0)
-int newEntitis(ECS::EntityManager* eManager, std::vector<ECS::EntityID> * idList, const size_t count)
+int newEntitis(
+	ECS::EntityManager* eManager, 
+	std::vector<ECS::EntityID> * idList, 
+	const size_t count)
 {
 	int error = 0;
 
@@ -255,6 +266,74 @@ namespace TestUnit
 			
 			errorLogger += destoryEntities(etManager, &idList);
 
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+		}
+
+		// can the entityID be set into the componet?
+		{
+		TEST_UNIT_START("can the entityID be set into the componet?")
+
+			DeclareEntityManager(etManager);
+			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			RandomTool::RandomSet<size_t> randomIndices;
+			std::vector<TestStructA*> cmpList;
+			std::vector<ECS::EntityID> idList;
+
+			const size_t entityCount = 100;				// avaliable entities
+			// allocate the ids
+			errorLogger += newEntitis(etManager, &idList, entityCount);
+			// allocate the components
+			errorLogger += newComponents(tacManager, idList, &cmpList);
+
+			// for each id check that the id is same as the component
+			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
+			{
+				errorLogger +=
+					NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
+			}
+			// free all the id.
+			errorLogger += destoryEntities(etManager, &idList);
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+		}
+
+		// ensure that when we remove the entityID from the componentManager, the deconstructor is called
+		{
+		TEST_UNIT_START("ensure that when we remove the entityID from the componentManager, the deconstructor is called")
+			DeclareEntityManager(etManager);
+			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			int beforeDeconstructCount = TestStructA::deconstructCount;
+			RandomTool::RandomSet<size_t> randomIndices;
+			std::vector<TestStructA*> cmpList;
+			std::vector<ECS::EntityID> idList;
+
+			const size_t entityCount = 100;				// avaliable entities
+			// allocate the ids
+			errorLogger += newEntitis(etManager, &idList, entityCount);
+			// allocate the components
+			errorLogger += newComponents(tacManager, idList, &cmpList);
+
+			// for each id check that the id is same as the component
+			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
+			{
+				errorLogger += 
+					NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
+			}
+
+			// free all the components
+			for (auto id : idList)
+			{
+				errorLogger += NOT_EQ(true, tacManager.removeComponent(id));
+			}
+
+			// check the deallocat count
+			int aftherDeconstructCount = TestStructA::deconstructCount;
+			errorLogger += 
+				NOT_EQ(entityCount, aftherDeconstructCount - beforeDeconstructCount);
+
+			// free all the id.
+			errorLogger += destoryEntities(etManager, &idList);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
 		}
