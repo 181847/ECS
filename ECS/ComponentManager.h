@@ -20,9 +20,15 @@ public:
 	ComponentManager(size_t maxSize);
 	~ComponentManager();
 
+	// generate  a new component with the entityID,
+	// return the pointer.
+	// all the arguments will be pass to the COMPONENT_TYPE's Constructor.
 	template<typename ...CONSTRUCT_ARGS>
 	COMPONENT_TYPE *  newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
-	//bool removeComponent(EntityID removedID);
+	// get the 
+	COMPONENT_TYPE * getComponent(EntityID entityID);
+	// delete the component use the EntityID.
+	bool removeComponent(EntityID removedID);
 
 private:
 	size_t _maxSize;
@@ -41,11 +47,45 @@ inline ComponentManager<COMPONENT_TYPE>::~ComponentManager()
 }
 
 template<typename COMPONENT_TYPE>
-template<typename ...CONSTRUCT_ARGS>
-inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::getComponent(EntityID entityID)
 {
-	auto * pNewComp = new COMPONENT_TYPE(std::forward<COMPONENT_TYPE>(args)...);
+	auto iterCmp = _lookUpTable.find(entityID);
+	if (iterCmp == _lookUpTable.end())
+	{
+		return nullptr;
+	}
+	else
+	{
+		return iterCmp->second;
+	}
+}
+
+template<typename COMPONENT_TYPE>
+inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID)
+{
+	auto iterCmp = _lookUpTable.find(entityID);
+	if (iterCmp == _lookUpTable.end())
+	{
+		return false;
+	}
+	else
+	{
+		// delete the pointer.
+		delete iterCmp->second;
+		// erase it from the map
+		_lookUpTable.erase(iterCmp);
+		return true;
+	}
+}
+
+template<typename COMPONENT_TYPE>
+template<typename ...CONSTRUCT_ARGS>
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::newComponnet(
+	EntityID entityID, CONSTRUCT_ARGS&&...args)
+{
+	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
 	_lookUpTable[entityID] = pNewComp;
+	return pNewComp;
 }
 
 }// namespace ECS
