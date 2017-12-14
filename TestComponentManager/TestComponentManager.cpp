@@ -22,10 +22,12 @@ struct TestStructA
 {
 
 	static int deconstructCount;
+	static const int initDataA;
+	static const float initDataB;
 public:
 	int dataA;
 	float dataB;
-	TestStructA() :dataA(1), dataB(2.222f) {}
+	TestStructA() :dataA(initDataA), dataB(initDataB) {}
 	TestStructA(int initDataA, float initDataB)
 		:dataA(initDataA), dataB(initDataB){}
 	~TestStructA()
@@ -36,6 +38,8 @@ public:
 };
 
 int TestStructA::deconstructCount = 0;
+const int TestStructA::initDataA = 2;
+const float TestStructA::initDataB = 2.222;
 
 // get batch Entities,
 // return errors count, (if no error, return 0)
@@ -96,6 +100,96 @@ int newComponents(
 		compList->push_back(newComp);
 	}
 	return error;
+}
+
+
+// the main process is to allocate entityID
+// and get a new component with the id, 
+// then random delete components
+// finally delete th entityIDs
+// it will allocate all the entityID 
+template<typename COMPONENT_TYPE>
+int randomTestCompnets(
+	ECS::EntityManager* eManager,
+	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
+	size_t entityCount,
+	size_t loopTime = 20, 
+	bool randomPerBatch = false, 
+	int randSeed = 1)
+{
+	TestUnit::ErrorLogger			errorLogger;
+	std::vector<ECS::EntityID>		idList;			// store the entityIDs
+	std::vector<COMPONENT_TYPE*>		cmpList;		// store the components pointer
+	const size_t maxCmpSize = cManager.getMaxSize();
+
+	// get the entityIDs
+	newEntitis(eManager, &idList, maxCmpSize);
+	RandomTool::RandomSet<size_t> randomIndices;
+	RandomTool::RandomSet<size_t> deleteIndices;
+
+	// set seed
+	randomIndices.setSeed(randSeed);
+	// make the delete indices different
+	deleteIndices.setSeed(randSeed + 1);
+
+	// init random indices
+	randomIndices.randomSequence(maxCmpSize);
+	deleteIndices.randomSequence(maxCmpSize);
+
+	// loop allocat components, ensure ensure
+	// to use the components out.
+	for (size_t loopCount = 0; loopCount < loopTime; ++loopCount)
+	{
+		// each start, ensure the mananger don't allocate any component
+		errorLogger += NOT_EQ(0, cManager.getUsedCount());
+		// the random entities to get the components.
+		if (randomPerBatch)
+		{
+			randomIndices.tickSeed();
+			randomIndices.randomSequence(maxCmpSize);
+		}
+		
+		// new components
+		for (auto idIndex : randomIndices)
+		{
+			ECS::EntityID randID = idList[idIndex];
+			auto * newCmp = cManager.newComponnet(randID);
+			if (EQ(newCmp, nullptr))
+			{
+				break;
+			}
+			cmpList.push_back(newCmp);
+		}
+
+		// check each component is correct
+		for (auto cmp : cmpList)
+		{
+			errorLogger += NOT_EQ(TestStructA::initDataA, cmp->dataA);
+			errorLogger += NOT_EQ(TestStructA::initDataB, cmp->dataB);
+		}
+
+		// all the components should be used out
+		errorLogger += NOT_EQ(cManager.getUsedCount(), cManager.getMaxSize());
+
+		if (randomPerBatch)
+		{
+			deleteIndices.tickSeed();
+			deleteIndices.randomSequence(maxCmpSize);
+		}
+		// delete all the components
+		for (auto idIndex : deleteIndices)
+		{
+			ECS::EntityID randID = idList[idIndex];
+			errorLogger += NOT_EQ(true, cManager.removeComponent(randID));
+		}
+
+		cmpList.clear();
+	}
+
+	destoryEntities(eManager, &idList);
+
+	return errorLogger.getErrorCount();
+	
 }
 
 namespace TestUnit
@@ -252,8 +346,8 @@ namespace TestUnit
 			// default constructor
 			for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
 			{
-				errorLogger += NOT_EQ(1, cmpList[cmpIndex]->dataA);
-				errorLogger += NOT_EQ(2.222f, cmpList[cmpIndex]->dataB);
+				errorLogger += NOT_EQ(TestStructA::initDataA, cmpList[cmpIndex]->dataA);
+				errorLogger += NOT_EQ(TestStructA::initDataB, cmpList[cmpIndex]->dataB);
 				++cmpIndex;
 			}
 			// none default constructor
@@ -334,6 +428,17 @@ namespace TestUnit
 
 			// free all the id.
 			errorLogger += destoryEntities(etManager, &idList);
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+		}
+
+		// random test on componentManager
+		{
+		TEST_UNIT_START("random test on componentManager")
+			DeclareEntityManager(etManager);
+			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+
+			errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
 		}
