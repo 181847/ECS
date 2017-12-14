@@ -7,16 +7,21 @@
 #pragma comment(lib, "ECS.lib")
 namespace ECS
 {
-typedef size_t EntityID;
 
 extern log4cplus::Logger gECSLogger;
-const std::string gLoggerLayout = "%d{%m/%d/%y %H:%M:%S} -%m[%l]%n";
+static std::string gLoggerLayout = "%d{%m/%d/%y %H:%M:%S} -%m[%l]%n";
+// the ECS support up to {gMaxComponentTypeCount} different componentType.
+static const size_t gMaxComponentTypeCount = 32;
+
+// seral key type in the ECS.
+using EntityID			= size_t;
+using ComponentTypeID	= size_t;
+using ComponentMask		= std::bitset<gMaxComponentTypeCount>;
 
 // starup the ECS
 int init();
 
 // initialize the gECSLogger.
 int initLogger();
-
 
 }// namespace ECS
