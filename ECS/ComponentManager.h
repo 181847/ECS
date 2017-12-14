@@ -21,14 +21,15 @@ public:
 	~ComponentManager();
 
 	// generate  a new component with the entityID,
-	// return the pointer.
-	// all the arguments will be pass to the COMPONENT_TYPE's Constructor.
+	// pass all the rest arugment to the component's constructor.
 	template<typename ...CONSTRUCT_ARGS>
-	COMPONENT_TYPE *  newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
-	// get the 
-	COMPONENT_TYPE * getComponent(EntityID entityID);
+	COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
+	// Get Component pointer through entityID, if not exist, return nullptr.
+	COMPONENT_TYPE *	getComponent(EntityID entityID);
+	// Get Component pointer through entityID, if not exist, return nullptr.
+	COMPONENT_TYPE *	operator [](EntityID entityID);
 	// delete the component use the EntityID.
-	bool removeComponent(EntityID removedID);
+	bool				removeComponent(EntityID removedID);
 
 private:
 	size_t _maxSize;
@@ -58,6 +59,12 @@ inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::getComponent(EntityID 
 	{
 		return iterCmp->second;
 	}
+}
+
+template<typename COMPONENT_TYPE>
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::operator[](EntityID entityID)
+{
+	return this->getComponent(entityID);
 }
 
 template<typename COMPONENT_TYPE>
