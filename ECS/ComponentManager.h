@@ -43,9 +43,13 @@ public:
 	COMPONENT_TYPE *	operator [](EntityID entityID);
 	// delete the component use the EntityID.
 	bool				removeComponent(EntityID removedID);
+	size_t				getMaxSize();
+	size_t				getUsedCount();
 
 private:
+	// the max avaliable component count
 	size_t _maxSize;
+	size_t _usedComponentCount;
 	std::unordered_map<EntityID, COMPONENT_TYPE*> _lookUpTable;
 };
 
@@ -96,8 +100,21 @@ inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID
 		delete iterCmp->second;
 		// erase it from the map
 		_lookUpTable.erase(iterCmp);
+		--_usedComponentCount;
 		return true;
 	}
+}
+
+template<typename COMPONENT_TYPE>
+inline size_t ComponentManager<COMPONENT_TYPE>::getMaxSize()
+{
+	return _maxSize;
+}
+
+template<typename COMPONENT_TYPE>
+inline size_t ComponentManager<COMPONENT_TYPE>::getUsedCount()
+{
+	return _usedComponentCount;
 }
 
 template<typename COMPONENT_TYPE>
@@ -109,9 +126,14 @@ newComponnet
 {
 	// prevent from create the component with the same entityID.
 	ASSERT(nullptr == this->getComponent(entityID));
+	if (_usedComponentCount == _maxSize)
+	{
+		return nullptr;
+	}
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
 	setComponentEntityID(pNewComp, entityID);
 	_lookUpTable[entityID] = pNewComp;
+	++_usedComponentCount;
 	return pNewComp;
 }
 
