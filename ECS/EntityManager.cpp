@@ -73,7 +73,7 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	{
 		// this is a error,
 		// it means that the caller is trying to destory the id
-		// that hasn't benn allocate.
+		// which is still in the freeBlock.
 		return false;
 	}
 	else if ((prev->end + 1) == destoriedID)
