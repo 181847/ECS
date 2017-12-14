@@ -7,7 +7,7 @@ namespace ECS
 {
 
 // this struct have no memeber, 
-// its main goal is used to generat the unique number
+// its main goal is to generat the unique number
 // for each COMPONENT_TYPE.
 struct ComponetTypeIDSeed{};
 typedef TypeTool::IDGenerator<ComponetTypeIDSeed> ComponentIDGenerator;
