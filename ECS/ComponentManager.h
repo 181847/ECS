@@ -2,6 +2,7 @@
 #include "ECS.h"
 #include <MyTools\TypeTool.h>
 #include <unordered_map>
+#include "BaseComponent.h"
 
 namespace ECS
 {
@@ -12,9 +13,21 @@ namespace ECS
 struct ComponetTypeIDSeed{};
 typedef TypeTool::IDGenerator<ComponetTypeIDSeed> ComponentIDGenerator;
 
+class BaseComponentSecretDesigner
+{
+protected:
+	// set the _hostID of the component.
+	inline static void setComponentEntityID(BaseComponent * pcmp, EntityID newID)
+	{
+		pcmp->_hostID = newID;
+	}
+};
+
 
 template<typename COMPONENT_TYPE>
 class ComponentManager
+	:public BaseComponentSecretDesigner // with this class the ComponentManager can change the Component's EntityID,
+	// and hide it from outside the ComponentManager.
 {
 public:
 	ComponentManager(size_t maxSize);
@@ -48,7 +61,9 @@ inline ComponentManager<COMPONENT_TYPE>::~ComponentManager()
 }
 
 template<typename COMPONENT_TYPE>
-inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::getComponent(EntityID entityID)
+inline COMPONENT_TYPE * 
+ComponentManager<COMPONENT_TYPE>::getComponent
+(EntityID entityID)
 {
 	auto iterCmp = _lookUpTable.find(entityID);
 	if (iterCmp == _lookUpTable.end())
@@ -87,10 +102,15 @@ inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID
 
 template<typename COMPONENT_TYPE>
 template<typename ...CONSTRUCT_ARGS>
-inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::newComponnet(
-	EntityID entityID, CONSTRUCT_ARGS&&...args)
+inline COMPONENT_TYPE * 
+ComponentManager<COMPONENT_TYPE>::
+newComponnet
+(EntityID entityID, CONSTRUCT_ARGS&&...args)
 {
+	// prevent from create the component with the same entityID.
+	ASSERT(nullptr == this->getComponent(entityID));
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
+	setComponentEntityID(pNewComp, entityID);
 	_lookUpTable[entityID] = pNewComp;
 	return pNewComp;
 }
