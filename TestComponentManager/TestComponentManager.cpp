@@ -3,6 +3,7 @@
 
 #include <ECS\EntityManager.h>
 #include <ECS\ComponentManager.h>
+#include <ECS\BaseComponent.h>
 #include <MyTools\UnitTestModules.h>
 #include <MyTools\RandomTool.h>
 #include <vector>
@@ -18,6 +19,7 @@ const int gComponentMaxSize = 64;
 
 
 struct TestStructA
+	:public ECS::BaseComponent
 {
 public:
 	int dataA;
