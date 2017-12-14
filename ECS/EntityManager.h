@@ -31,14 +31,14 @@ class EntityManager
 public:
 	// singlton
 	static EntityManager* getInstance();
-
 	// get a new Entity and return its ID.
 	EntityID newEntity();
 	// destory the Entity.
 	bool destoryEntity(EntityID destoriedID);
+	// check if the checkID is a valid id;
+	bool isValid(EntityID checkID);
 
 	size_t getSize() const;
-
 	size_t getUsedIDCount() const;
 private:
 	EntityManager();

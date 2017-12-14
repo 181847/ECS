@@ -150,6 +150,54 @@ bool EntityManager::destoryEntity(EntityID destoriedID)
 	return true;
 }
 
+bool EntityManager::isValid(EntityID checkID)
+{
+	// zero is alway the invalid ID.
+	if ( ! checkID)
+	{
+		return false;
+	}
+	PEntityFreeBlock prev(nullptr), curr(_freeList);
+
+	while (curr)
+	{
+		// break the loop if the curr block is start
+		// after the destoriedID.
+		if (curr->start > checkID)
+		{
+			break;
+		}
+		else
+		{
+			prev = curr;
+			curr = curr->next;
+		}
+	}
+
+	// the error Image:
+	//prev						curr
+	// |						/ \
+	// V					   /   \
+	//|-----------|			null OR	|-----------|
+	//|start   end|					|start   end|
+	//|-----------|					|-----------|
+	//	   /\
+	//	   |
+	//	   |
+	//	checkID
+
+	unsigned char operationFlag = 0;
+	if (prev != nullptr && (prev->end) > checkID)
+	{
+		// this is a error,
+		// it means that the caller is trying to destory the id
+		// which is still in the freeBlock.
+		return false;
+	}
+
+	return true;
+}
+
 size_t EntityManager::getSize() const
 {
 	// the zero is a invalid ID.
