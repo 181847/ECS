@@ -167,7 +167,7 @@ void AddTestUnit()
 		// we generate a random indices for the idList from 0 to entityCount - 1
 		randomIndices.randomSequence(entityCount);
 
-		// use an array to indicate the corresponding id in the idList is delete.
+		// use an array to indicate the corresponding id in the idList is valid.
 		std::vector<bool> validFlagList(entityCount);
 		for (auto & vFlag : validFlagList)
 		{
@@ -212,8 +212,10 @@ void AddTestUnit()
 
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
-}
-}
+}// function void AddTestUnit()
+
+
+}// namespace TestUnit
 
 
 int main()
