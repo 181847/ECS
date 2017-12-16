@@ -25,6 +25,7 @@ EntityID newEntity()  |  新分配一个EntityID，返回这个ID值
 bool destoryEntity(EntityID destoriedID)  |删除一个Entity，返回是否删除成功  
 size_t getSize()  |  返回能够分配的总的Entity的数量
 size_t getUsedIDCount()  |  返回已经分配的Entity数量
+bool isValid(EntityID checkID)  |  判断指定的entityID是否是已被分配的ID，或者说处于激活状态。
 
 
 # ComponentManager<CMP_TYPE>
