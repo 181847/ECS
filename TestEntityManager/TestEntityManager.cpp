@@ -112,6 +112,7 @@ void GetReady()
 {
 	ECS::ComponentIDGenerator::newID<IntComponent>();
 	ECS::ComponentIDGenerator::newID<FloatComponet>();
+	ECS::ComponentIDGenerator::newID<CharComponent>();
 }
 
 void AfterTest()
@@ -276,7 +277,7 @@ void AddTestUnit()
 				randomIndexPosition < randomIndices.size();
 				++randomIndexPosition)
 			{
-				ECS::EntityManager::MaskResult result;
+				ECS::MaskResult result;
 				if (randomIndexPosition < partOneCount)
 				{
 					result = eManager->maskComponentType<IntComponent, FloatComponet>(idList[
@@ -299,7 +300,7 @@ void AddTestUnit()
 				randomIndexPosition < randomIndices.size();
 				++randomIndexPosition)
 			{
-				ECS::EntityManager::MaskResult result;
+				ECS::MaskResult result;
 				if (randomIndexPosition < partOneCount)
 				{
 					result = eManager->maskComponentType<IntComponent, CharComponent>(idList[
@@ -319,6 +320,33 @@ void AddTestUnit()
 		TEST_UNIT_END;
 	}// test Unit test componentMask use EntityManager
 
+	// test Unit get mask of components
+	{
+		TEST_UNIT_START("get mask of components")
+			auto mask0010 = ECS::getComponentMask<IntComponent>();
+			auto mask1010 = ECS::getComponentMask<IntComponent, CharComponent>();
+			auto mask1100 = ECS::getComponentMask<CharComponent, FloatComponet>();
+			auto mask1110 = ECS::getComponentMask<IntComponent, FloatComponet, CharComponent>();
+
+			errorLogger += NOT_EQ(mask0010, 2);
+			errorLogger += NOT_EQ(mask1010, 10);
+			errorLogger += NOT_EQ(mask1100, 12);
+			errorLogger += NOT_EQ(mask1110, 14);
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+	}
+
+	// test Unit get entityIter.
+	{
+		TEST_UNIT_START("get entityIter")
+
+			DeclareEntityManager(eManager);
+			auto entIter = eManager->RangeEntities<IntComponent, FloatComponet>();
+			//auto mask = entIter._desiredMask;
+
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+	}
 }// function void AddTestUnit()
 
 
