@@ -119,6 +119,7 @@
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
     <ClInclude Include="EntityManager.h" />
+    <ClInclude Include="EntityManagerTool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseComponent.cpp" />

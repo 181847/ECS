@@ -38,5 +38,8 @@
     <ClInclude Include="BaseComponent.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="EntityManagerTool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
