@@ -21,6 +21,10 @@ using EntityID			= size_t;
 using ComponentTypeID	= size_t;
 using ComponentMask		= std::bitset<gMaxComponentTypeCount>;
 
+template<typename ...COMPONENT_TYPES>
+ComponentMask getComponentMask();
+
+
 
 // this struct have no memeber, 
 // its main goal is to generat the unique number
@@ -33,5 +37,13 @@ int init();
 
 	// initialize the gECSLogger.
 int initLogger();
+
+template<typename ...COMPONENT_TYPES>
+inline ComponentMask getComponentMask()
+{
+	static ComponentMask mask(0);
+	static bool args[] = { (mask |= 1ull << ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
+	return mask;
+}
 
 }// namespace ECS
