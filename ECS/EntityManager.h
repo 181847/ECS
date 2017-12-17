@@ -45,20 +45,24 @@ public:
 
 	// singlton
 	static EntityManager* getInstance();
+
 	// get a new Entity and return its ID.
-	EntityID newEntity();
+	EntityID	newEntity();
+
 	// destory the Entity.
-	bool destoryEntity(EntityID destoriedID);
+	bool		destoryEntity(EntityID destoriedID);
+
 	// check if the checkID is a valid id;
-	bool isValid(EntityID checkID);
+	bool		isValid(EntityID checkID);
 
 	// this function is major used in temaskComponentType<>(),
 	// to mask only one type of Component.
 	template<typename COMPONENT_TYPE>
-	MaskResult maskSingleComponentType(EntityID entityID);
+	MaskResult	maskSingleComponentType(EntityID entityID);
 
+	// to mask an entity component types with all the template args.
 	template<typename ...COMPONENT_TYPES>
-	MaskResult maskComponentType(EntityID entityID);
+	MaskResult	maskComponentType(EntityID entityID);
 	
 	size_t getSize() const;
 	size_t getUsedIDCount() const;
@@ -66,9 +70,9 @@ private:
 	EntityManager();
 	~EntityManager();
 
-	ComponentMask _maskPool[maxEntityCount];
-	PEntityFreeBlock _freeList;
-	size_t _usedID;
+	ComponentMask		_maskPool[maxEntityCount];
+	PEntityFreeBlock	_freeList;
+	size_t				_usedID;
 };
 
 template<typename COMPONENT_TYPE>
@@ -84,15 +88,14 @@ inline EntityManager::MaskResult EntityManager::maskSingleComponentType(EntityID
 	ASSERT(idForTheComponentType > 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
 
 	// always use a static var to store the mask for the component type.
-	// 1ull means 'one unsigned long long'
+	// 1ull means 'number one whose type is unsigned long long'
 	static ComponentMask maskForTheComponentType{1ull << idForTheComponentType };
 #else
 	static ComponentMask maskForTheComponentType(1ull << ComponentIDGenerator::getID<LAST_COMPONENT_TYPE>());
 #endif
 
 	// does the entity already have the componentType?
-	if ((_maskPool[entityID] & maskForTheComponentType)
-		.any())
+	if ((_maskPool[entityID] & maskForTheComponentType).any())
 	{
 		return MaskResultFlag::RedundancyComponent;
 	}
@@ -108,7 +111,6 @@ inline EntityManager::MaskResult EntityManager::maskComponentType(EntityID entit
 {
 	MaskResult result = 0;
 	unsigned char zeros[] = { (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), 0)... };
-
 	return result;
 }
 
