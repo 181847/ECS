@@ -38,6 +38,8 @@ EntityID EntityManager::newEntity()
 	}
 
 	++_usedID;
+	// clear the mask.
+	_maskPool[retID].reset();
 	return retID;
 }
 
