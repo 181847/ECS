@@ -14,6 +14,7 @@ namespace ECS
 // you can access the component through ComponentManager with the EntityID.
 class EntityManager
 {
+public:
 	// the enum used to indicate the operationResult of maskComponentType,
 	// this enum type is major used in the recursion, 
 	// and we will combine each recursion result together.
@@ -31,6 +32,35 @@ class EntityManager
 		EntityID end;
 		EntityFreeBlock* next;
 	}EntityFreeBlock, *PEntityFreeBlock;
+
+	// The iterator to traverse the desired entity.
+	template<typename ...COMPONENT_TYPES>
+	class EntityIter
+	{
+	private:
+		// target entity componetMask
+		const ComponentMask _desiredMask;
+		// max entity Count.
+		const size_t _maxEntityCount;
+		// the pointer to the EntityManager's maskPool
+		const ComponentMask* const _maskPool;
+		// the freeList which contain the invalid EntityIDs.
+		EntityManager::PEntityFreeBlock _pFreeList;
+		// next Entity
+		EntityID _nextID;
+
+	public:
+		EntityIter(
+			const size_t&				maxEntityCount, 
+			const ComponentMask* const	maskPool, 
+			PEntityFreeBlock			pFreeListHead);
+
+		EntityID operator*();
+
+		EntityIter& operator ++();
+
+		bool operator != (const EntityIter<COMPONENT_TYPES...>& end) const;
+	};// class EntityIter
 
 public:
 	enum MaskResultFlag
@@ -63,6 +93,14 @@ public:
 	// to mask an entity component types with all the template args.
 	template<typename ...COMPONENT_TYPES>
 	MaskResult	maskComponentType(EntityID entityID);
+
+	// check if the entity have the component type.
+	template<typename ...COMPONENT_TYPES>
+	bool haveComponent(EntityID entityID);
+	
+	// get the iterator of the entity which should have the specific ComponentType.
+	template<typename ...COMPONENT_TYPES>
+	auto RangeEntities();
 	
 	size_t getSize() const;
 	size_t getUsedIDCount() const;
@@ -74,6 +112,8 @@ private:
 	PEntityFreeBlock	_freeList;
 	size_t				_usedID;
 };
+
+
 
 template<typename COMPONENT_TYPE>
 inline EntityManager::MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
@@ -110,8 +150,62 @@ template<typename ...COMPONENT_TYPES>
 inline EntityManager::MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
 	MaskResult result = 0;
-	unsigned char zeros[] = { (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), 0)... };
+	bool zeros[] = { (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
 	return result;
+}
+
+template<typename ...COMPONENT_TYPES>
+inline bool EntityManager::haveComponent(EntityID entityID)
+{
+	if (isValid(entityID))
+	{
+		ComponentMask mask(0);
+		// get all the mask.
+		bool args[] = { 
+			(mask |= 1ull << 
+			ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
+		if ((_maskPool[entityID] & mask) == mask)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+template<typename ...COMPONENT_TYPES>
+inline auto EntityManager::RangeEntities()
+{
+	return EntityIter<COMPONENT_TYPES...>(maxEntityCount, _maskPool, _freeList);
+}
+
+template<typename ...COMPONENT_TYPES>
+inline EntityManager::EntityIter<COMPONENT_TYPES...>::EntityIter(
+	const size_t & maxEntityCount, 
+	const ComponentMask * const pMaskPool, 
+	PEntityFreeBlock pFreeListHead)
+	:
+	_desiredMask(getComponentMask<COMPONENT_TYPES...>()), 
+	_maxEntityCount(maxEntityCount), 
+	_maskPool(pMaskPool), 
+	_pFreeList(pFreeListHead)
+{
+}
+template<typename ...COMPONENT_TYPES>
+inline EntityID EntityManager::EntityIter<...COMPONENT_TYPES>::operator*()
+{
+	return _nextID;
+}
+template<typename ...COMPONENT_TYPES>
+inline EntityManager::EntityIter<COMPONENT_TYPES...> & EntityManager::EntityIter<...COMPONENT_TYPES>::operator++()
+{
+	// TODO: 在此处插入 return 语句
+	return *this;
+}
+
+template<typename ...COMPONENT_TYPES>
+inline bool EntityManager::EntityIter<COMPONENT_TYPES...>::operator!=(const EntityManager::EntityIter<COMPONENT_TYPES...> & end) const
+{
+	return _nextID != 0;
 }
 
 }// namespace ECS
