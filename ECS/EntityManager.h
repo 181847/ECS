@@ -135,7 +135,7 @@ inline bool EntityManager::haveComponent(EntityID entityID)
 template<typename ...COMPONENT_TYPES>
 inline auto EntityManager::RangeEntities()
 {
-	return EntityIter<COMPONENT_TYPES...>(maxEntityCount, _maskPool, _freeList);
+	return EntityRange<COMPONENT_TYPES...>(maxEntityCount, _maskPool, _freeList);
 }
 
 }// namespace ECS
