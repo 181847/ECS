@@ -410,10 +410,40 @@ void AddTestUnit()
 		TEST_UNIT_START("get entityIter")
 
 			DeclareEntityManager(eManager);
-			auto entIter = eManager->RangeEntities<IntComponent, FloatComponent>();
-			//auto mask = entIter._desiredMask;
+			//auto entIter = eManager->RangeEntities<IntComponent, FloatComponent>();
+			//auto mask = entIter._desirMask;
+			std::vector<ECS::EntityID> idList1;
+			const size_t idCount1 = 60;
+			std::vector<ECS::EntityID> idList2;
+			const size_t idCount2 = 50;
+			std::vector<ECS::EntityID> idList3;
+			const size_t idCount3 = 60;
+			std::vector<ECS::EntityID> idList4;
+			const size_t idCount4 = 60;
+			newEntitis(eManager, &idList1, idCount1);
+			newEntitis(eManager, &idList2, idCount3);
+			newEntitis(eManager, &idList3, idCount3);
+			newEntitis(eManager, &idList4, idCount4);
 
-			return errorLogger.conclusion();
+			destoryEntities(eManager, &idList1);
+			destoryEntities(eManager, &idList3);
+
+
+			eManager->maskComponentType<IntComponent, FloatComponent>(idList2[4]);
+			eManager->maskComponentType<IntComponent, CharComponent>(idList4[15]);
+			auto range1 = eManager->RangeEntities<IntComponent, FloatComponent>();
+			auto range2 = eManager->RangeEntities<IntComponent, CharComponent>();
+
+			auto be1 = range1.begin();
+			auto be2 = range2.begin();
+
+			errorLogger += NOT_EQ(*be1, idList2[4]);
+			errorLogger += NOT_EQ(*be2, idList4[15]);
+
+			destoryEntities(eManager, &idList2);
+			destoryEntities(eManager, &idList4);
+
+			return false;
 		TEST_UNIT_END;
 	}
 }// function void AddTestUnit()
