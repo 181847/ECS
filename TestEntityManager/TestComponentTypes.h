@@ -10,7 +10,7 @@ public:
 	int data;
 };
 
-class FloatComponet
+class FloatComponent
 	:public ECS::BaseComponent
 {
 public:
