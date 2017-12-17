@@ -111,7 +111,7 @@ namespace TestUnit
 void GetReady()
 {
 	ECS::ComponentIDGenerator::newID<IntComponent>();
-	ECS::ComponentIDGenerator::newID<FloatComponet>();
+	ECS::ComponentIDGenerator::newID<FloatComponent>();
 	ECS::ComponentIDGenerator::newID<CharComponent>();
 }
 
@@ -280,7 +280,7 @@ void AddTestUnit()
 				ECS::MaskResult result;
 				if (randomIndexPosition < partOneCount)
 				{
-					result = eManager->maskComponentType<IntComponent, FloatComponet>(idList[
+					result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
 							randomIndices[randomIndexPosition]]);
 					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
 				}
@@ -325,8 +325,8 @@ void AddTestUnit()
 		TEST_UNIT_START("get mask of components")
 			auto mask0010 = ECS::getComponentMask<IntComponent>();
 			auto mask1010 = ECS::getComponentMask<IntComponent, CharComponent>();
-			auto mask1100 = ECS::getComponentMask<CharComponent, FloatComponet>();
-			auto mask1110 = ECS::getComponentMask<IntComponent, FloatComponet, CharComponent>();
+			auto mask1100 = ECS::getComponentMask<CharComponent, FloatComponent>();
+			auto mask1110 = ECS::getComponentMask<IntComponent, FloatComponent, CharComponent>();
 
 			errorLogger += NOT_EQ(mask0010, 2);
 			errorLogger += NOT_EQ(mask1010, 10);
@@ -336,12 +336,81 @@ void AddTestUnit()
 		TEST_UNIT_END;
 	}
 
+	// test Unit check componentType of the entity
+	{
+		TEST_UNIT_START("check componentType of the entity")
+			DeclareEntityManager(eManager);
+
+			using MaskResultFlag = ECS::EntityManager::MaskResultFlag;
+			const size_t idCount = 5;
+			const size_t partOneCount = 2;
+			const size_t partTwoCount = idCount - partOneCount;
+
+			std::vector<ECS::EntityID> idList;
+			errorLogger += newEntitis(eManager, &idList, idCount);
+
+			RandomTool::RandomSet<size_t> randomIndices;
+			randomIndices.setSeed(1);
+			randomIndices.randomSequence(idCount);
+
+			// part one will mask two type of component[IntComponet, FloatComponent].
+			// part two will only mask with IntComponent.
+			for (size_t randomIndexPosition = 0;
+				randomIndexPosition < randomIndices.size();
+				++randomIndexPosition)
+			{
+				ECS::MaskResult result;
+				if (randomIndexPosition < partOneCount)
+				{
+					result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
+							randomIndices[randomIndexPosition]]);
+					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
+				}
+				else
+				{
+					result = eManager->maskComponentType<IntComponent>(idList[
+						randomIndices[randomIndexPosition]]);
+					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
+				}
+			}
+
+			// part one will append [IntComponent, CharComponent], 
+			//		which result should return Success | RedundancyComponent
+			// part two will only mask with FloatComponent,
+			//		which result should return Success.
+			for (size_t randomIndexPosition = 0;
+				randomIndexPosition < randomIndices.size();
+				++randomIndexPosition)
+			{
+				//ECS::EntityID id = idList[randomIndices[randomIndexPosition]];
+				ECS::EntityID id = idList[randomIndices[randomIndexPosition]];
+				if (randomIndexPosition < partOneCount)
+				{
+					bool result = eManager->haveComponent<IntComponent, FloatComponent>(id);
+					errorLogger += NOT_EQ(true, result);
+					result = eManager->haveComponent<IntComponent, FloatComponent, CharComponent>(id);
+					errorLogger += NOT_EQ(false, result);
+				}
+				else
+				{
+					bool result = eManager->haveComponent<IntComponent>(id);
+					errorLogger += NOT_EQ(true, result);
+					result = eManager->haveComponent<IntComponent, FloatComponent>(id);
+					errorLogger += NOT_EQ(false, result);
+				}
+			}
+
+			errorLogger += destoryEntities(eManager, &idList);
+			return errorLogger.conclusion();
+		TEST_UNIT_END;
+	}
+
 	// test Unit get entityIter.
 	{
 		TEST_UNIT_START("get entityIter")
 
 			DeclareEntityManager(eManager);
-			auto entIter = eManager->RangeEntities<IntComponent, FloatComponet>();
+			auto entIter = eManager->RangeEntities<IntComponent, FloatComponent>();
 			//auto mask = entIter._desiredMask;
 
 			return errorLogger.conclusion();
