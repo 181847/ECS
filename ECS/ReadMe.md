@@ -26,7 +26,24 @@ bool destoryEntity(EntityID destoriedID)  |删除一个Entity，返回是否删�
 size_t getSize()  |  返回能够分配的总的Entity的数量
 size_t getUsedIDCount()  |  返回已经分配的Entity数量
 bool isValid(EntityID checkID)  |  判断指定的entityID是否是已被分配的ID，或者说处于激活状态。
+MaskResult maskSingleComponentType<CMP_TYPE>(EntityID)  |  为一个entity标志一种组件类型，返回的结果只可能是MaskResultFlag中的一种
+MaskResult maskComponentType<...CMP_TYPES>(EntityID entityID);  |  接受变长模板参数，为一个entity标志多个组件类型。返回的值是每一种组件类型调用maskSingleComponentType的按位与的结果，只有最终结果 == MaskResultFlag::Success的时候才表明没有错误发生，否则需要程序员自行判断发生了哪一种错误。
 
+#### MaskResult
+在为entity标志组件类型的时候，可以同时标志多种组件，为了让所有标志过程的结果显示在一个变量中，使用bit组合的方式来表示  
+MaskResult就是一个8个bit的unsigned char，每一位的含义在MaskResultFlag（枚举类型）中有定义：
+#### MaskResultFlag
+枚举可能的标志组件的结果：
+```c++
+enum MaskResultFlag
+		: unsigned char
+	{ 
+		InvalidEntityID			= 1,	// 0001 entityID非法，这一项基本没用，因平常直接坐在这里断言
+		Success					= 2,	// 0010 成功
+		RedundancyComponent		= 4,	// 0100 重复标志组件类型
+		InvalidComponentType	= 8		// 1000 组件类型不可用
+	};
+```
 
 # ComponentManager<CMP_TYPE>
 一个模板类，模板参数为Component的具体类型
