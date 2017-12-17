@@ -1,6 +1,7 @@
 #pragma once
 #include "ECS.h"
 #include <bitset>
+#include "EntityManagerTool.h"
 
 namespace ECS
 {
@@ -22,46 +23,6 @@ public:
 	// be aware that the EntityID '0' means invalid Entity,
 	static const size_t maxEntityCount = 2048;
 
-	// the EntityFreeBlock is used to store the free entity ID,
-	// all the avaliable id are stored between the EntityFreBlock.start~end.
-	// which entityID can be used .
-	typedef struct EntityFreeBlock
-	{
-	public:
-		EntityID start;
-		EntityID end;
-		EntityFreeBlock* next;
-	}EntityFreeBlock, *PEntityFreeBlock;
-
-	// The iterator to traverse the desired entity.
-	template<typename ...COMPONENT_TYPES>
-	class EntityIter
-	{
-	private:
-		// target entity componetMask
-		const ComponentMask _desiredMask;
-		// max entity Count.
-		const size_t _maxEntityCount;
-		// the pointer to the EntityManager's maskPool
-		const ComponentMask* const _maskPool;
-		// the freeList which contain the invalid EntityIDs.
-		EntityManager::PEntityFreeBlock _pFreeList;
-		// next Entity
-		EntityID _nextID;
-
-	public:
-		EntityIter(
-			const size_t&				maxEntityCount, 
-			const ComponentMask* const	maskPool, 
-			PEntityFreeBlock			pFreeListHead);
-
-		EntityID operator*();
-
-		EntityIter& operator ++();
-
-		bool operator != (const EntityIter<COMPONENT_TYPES...>& end) const;
-	};// class EntityIter
-
 public:
 	enum MaskResultFlag
 		: unsigned char
@@ -71,7 +32,6 @@ public:
 		RedundancyComponent		= 4,	// 0100
 		InvalidComponentType	= 8		// 1000
 	};
-	using MaskResult = unsigned char;
 
 	// singlton
 	static EntityManager* getInstance();
@@ -116,7 +76,7 @@ private:
 
 
 template<typename COMPONENT_TYPE>
-inline EntityManager::MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
+inline MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
 {
 	ASSERT(isValid(entityID));
 #ifdef _DEBUG
@@ -147,7 +107,7 @@ inline EntityManager::MaskResult EntityManager::maskSingleComponentType(EntityID
 }
 
 template<typename ...COMPONENT_TYPES>
-inline EntityManager::MaskResult EntityManager::maskComponentType(EntityID entityID)
+inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
 	MaskResult result = 0;
 	bool zeros[] = { (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
@@ -176,36 +136,6 @@ template<typename ...COMPONENT_TYPES>
 inline auto EntityManager::RangeEntities()
 {
 	return EntityIter<COMPONENT_TYPES...>(maxEntityCount, _maskPool, _freeList);
-}
-
-template<typename ...COMPONENT_TYPES>
-inline EntityManager::EntityIter<COMPONENT_TYPES...>::EntityIter(
-	const size_t & maxEntityCount, 
-	const ComponentMask * const pMaskPool, 
-	PEntityFreeBlock pFreeListHead)
-	:
-	_desiredMask(getComponentMask<COMPONENT_TYPES...>()), 
-	_maxEntityCount(maxEntityCount), 
-	_maskPool(pMaskPool), 
-	_pFreeList(pFreeListHead)
-{
-}
-template<typename ...COMPONENT_TYPES>
-inline EntityID EntityManager::EntityIter<...COMPONENT_TYPES>::operator*()
-{
-	return _nextID;
-}
-template<typename ...COMPONENT_TYPES>
-inline EntityManager::EntityIter<COMPONENT_TYPES...> & EntityManager::EntityIter<...COMPONENT_TYPES>::operator++()
-{
-	// TODO: 在此处插入 return 语句
-	return *this;
-}
-
-template<typename ...COMPONENT_TYPES>
-inline bool EntityManager::EntityIter<COMPONENT_TYPES...>::operator!=(const EntityManager::EntityIter<COMPONENT_TYPES...> & end) const
-{
-	return _nextID != 0;
 }
 
 }// namespace ECS
