@@ -5,6 +5,7 @@
 #include <MyTools\UnitTestModules.h>
 #include <MyTools\RandomTool.h>
 #include "TestComponentTypes.h"
+#include <iostream>
 
 DECLARE_TEST_UNITS;
 
@@ -259,7 +260,7 @@ void AddTestUnit()
 		TEST_UNIT_START("test componentMask use EntityManager")
 			DeclareEntityManager(eManager);
 
-			using MaskResultFlag = ECS::EntityManager::MaskResultFlag;
+			using MaskResultFlag = ECS::MaskResultFlag;
 			const size_t idCount = 5;
 			const size_t partOneCount = 2;
 			const size_t partTwoCount = idCount - partOneCount;
@@ -341,7 +342,7 @@ void AddTestUnit()
 		TEST_UNIT_START("check componentType of the entity")
 			DeclareEntityManager(eManager);
 
-			using MaskResultFlag = ECS::EntityManager::MaskResultFlag;
+			using MaskResultFlag = ECS::MaskResultFlag;
 			const size_t idCount = 5;
 			const size_t partOneCount = 2;
 			const size_t partTwoCount = idCount - partOneCount;
@@ -430,6 +431,7 @@ void AddTestUnit()
 
 
 			eManager->maskComponentType<IntComponent, FloatComponent>(idList2[4]);
+			eManager->maskComponentType<IntComponent, FloatComponent>(idList2[8]);
 			eManager->maskComponentType<IntComponent, CharComponent>(idList4[15]);
 			auto range1 = eManager->RangeEntities<IntComponent, FloatComponent>();
 			auto range2 = eManager->RangeEntities<IntComponent, CharComponent>();
@@ -439,6 +441,11 @@ void AddTestUnit()
 
 			errorLogger += NOT_EQ(*be1, idList2[4]);
 			errorLogger += NOT_EQ(*be2, idList4[15]);
+
+			for (auto id : range1)
+			{
+				std::cout << "range 1 id: " << id << std::endl;
+			}
 
 			destoryEntities(eManager, &idList2);
 			destoryEntities(eManager, &idList4);
