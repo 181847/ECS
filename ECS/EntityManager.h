@@ -24,14 +24,6 @@ public:
 	static const size_t maxEntityCount = 2048;
 
 public:
-	enum MaskResultFlag
-		: unsigned char
-	{ 
-		InvalidEntityID			= 1,	// 0001
-		Success					= 2,	// 0010 
-		RedundancyComponent		= 4,	// 0100
-		InvalidComponentType	= 8		// 1000
-	};
 
 	// singlton
 	static EntityManager* getInstance();
