@@ -102,7 +102,7 @@ template<typename ...COMPONENT_TYPES>
 inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
 	MaskResult result = 0;
-	bool zeros[] = { (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
+	bool zeros[] = { (false), (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
 	return result;
 }
 
