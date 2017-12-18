@@ -60,7 +60,9 @@ private:
 	EntityManager();
 	~EntityManager();
 
-	ComponentMask		_maskPool[maxEntityCount];
+	// add another one for entityID 0,
+	// which means a invalid ID.
+	ComponentMask		_maskPool[1 + maxEntityCount];
 	PEntityFreeBlock	_freeList;
 	size_t				_usedID;
 };
@@ -102,6 +104,14 @@ template<typename ...COMPONENT_TYPES>
 inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
 	MaskResult result = 0;
+
+	// in the case that there is no ComponentTypes passed in,
+	// just return success.
+	if (sizeof...(COMPONENT_TYPES) == 0)
+	{
+		result = MaskResultFlag::Success;
+		return result;
+	}
 	bool zeros[] = { (false), (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
 	return result;
 }
@@ -114,6 +124,7 @@ inline bool EntityManager::haveComponent(EntityID entityID)
 		ComponentMask mask(0);
 		// get all the mask.
 		bool args[] = { 
+			(false), // in case that the COMPONENT_TYPES is zero.
 			(mask |= 1ull << 
 			ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
 		if ((_maskPool[entityID] & mask) == mask)
