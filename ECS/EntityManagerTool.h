@@ -7,6 +7,15 @@ namespace ECS
 
 using MaskResult = unsigned char;
 
+enum MaskResultFlag
+	: unsigned char
+{ 
+	InvalidEntityID			= 1,	// 0001
+	Success					= 2,	// 0010 
+	RedundancyComponent		= 4,	// 0100
+	InvalidComponentType	= 8		// 1000
+};
+
 // the EntityFreeBlock is used to store the free entity ID,
 // all the avaliable id are stored between the EntityFreBlock.start~end.
 // which entityID can be used .
@@ -117,6 +126,8 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 
 	while (true)
 	{
+		// _currID has been accessed,
+		// so the first thing is add one to it.
 		for (++_currID; _currID <= internalEnd; ++_currID)
 		{
 			if ((_maskPool[_currID] & _desiredMask) == _desiredMask)
@@ -136,25 +147,30 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 			_internalTail = _internalTail->next;
 		}
 
+		// update the internalStart and ...End
 		internalStart = getInternalStart();
 		internalEnd = getInternalEnd();
 	}
+
+	_currID = _currID > _maxEntityCount ? 0 : _currID;
+	
+	return *this;
 }
 
 template<typename ...COMPONENT_TYPES>
 inline bool EntityIter<COMPONENT_TYPES...>::operator!=(const EntityIter<COMPONENT_TYPES...> & end) const
 {
-	return _nextID != 0;
+	return _currID != 0;
 }
 
 template<typename ...COMPONENT_TYPES>
-inline EntityID EntityIter<...COMPONENT_TYPES>::getInternalStart()
+inline EntityID EntityIter<COMPONENT_TYPES...>::getInternalStart()
 {
 	return _internalHead == nullptr ? 1 : _internalHead->end + 1;
 }
 
 template<typename ...COMPONENT_TYPES>
-inline EntityID EntityIter<...COMPONENT_TYPES>::getInternalEnd()
+inline EntityID EntityIter<COMPONENT_TYPES...>::getInternalEnd()
 {
 	return _internalTail == nullptr ? _maxEntityCount : _internalTail->start - 1;
 }
@@ -164,7 +180,8 @@ inline
 EntityRange<COMPONENT_TYPES...>::EntityRange(
 	const size_t&				maxEntityCount,
 	const ComponentMask* const	maskPool,
-	PEntityFreeBlock			pFreeList):
+	PEntityFreeBlock			pFreeList)
+	:
 	_desiredMask(getComponentMask<COMPONENT_TYPES...>()),
 	_maxEntityCount(maxEntityCount),
 	_maskPool(maskPool),
@@ -182,7 +199,7 @@ inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
 
 	// next two pointer point to the two block inside which is the valid entities.
 	internalHead = (_pFreeList && _pFreeList->start == 1) ? _pFreeList : nullptr;
-	internalTail = (_pFreeList && _pFreeList->start == 1) ? _pFreeList->next : _pFreeList;
+	internalTail = (internalHead) ? _pFreeList->next : _pFreeList;
 
 	// get the start valid entityID
 	auto getInternalStart = [&internalHead]() ->EntityID {
@@ -221,8 +238,17 @@ inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
 	}
 
 	// have we find through all the entities?
+	// If we did, it means that we don't find even one entity 
+	// which meet our requirement, set it to zero.
 	firstId = firstId > _maxEntityCount ? 0 : firstId;
 	
 	return EntityIter<COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, internalHead, internalTail, firstId);
+}
+template<typename ...COMPONENT_TYPES>
+inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::end()
+{
+	// This end() return a iterator which has no use,
+	// because all the functionality is implement in the iterator of the begin().
+	return EntityIter<COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, nullptr, nullptr, 0);
 }
 }// namespace ECS
