@@ -149,6 +149,7 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 		// update the internalStart and ...End
 		internalStart	= getInternalStart();
 		internalEnd		= getInternalEnd();
+		_currID = internalStart;
 	}
 
 	_currID = _currID > _maxEntityCount ? 0 : _currID;
@@ -210,6 +211,8 @@ inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
 		return internalTail == nullptr ? _maxEntityCount : internalTail->start - 1;
 	};
 
+	bool findFirstID = false;
+
 	while (true)
 	{
 		internalStart = getInternalStart();
@@ -220,12 +223,12 @@ inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
 			if ((_maskPool[firstId] & _desiredMask) == _desiredMask)
 			{
 				// a flag to break the outer while loop.
-				internalTail = nullptr;
+				findFirstID = true;
 				break;
 			}
 		}
 
-		if (internalTail == nullptr)
+		if (findFirstID || internalTail == nullptr)
 		{
 			break;
 		}
