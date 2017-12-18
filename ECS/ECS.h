@@ -42,7 +42,9 @@ template<typename ...COMPONENT_TYPES>
 inline ComponentMask getComponentMask()
 {
 	static ComponentMask mask(0);
-	static bool args[] = { (mask |= 1ull << ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
+	static bool args[] = { 
+		(false), // in case that the COMPONENT_TYPES is zero.
+		(mask |= 1ull << ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
 	return mask;
 }
 
