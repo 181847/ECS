@@ -217,7 +217,7 @@ EntityManager::EntityManager()
 {
 	_freeList			= new EntityFreeBlock();
 	_freeList->start	= 1;
-	_freeList->end		= maxEntityCount - 1;
+	_freeList->end		= maxEntityCount;
 	_freeList->next		= nullptr;
 }
 
