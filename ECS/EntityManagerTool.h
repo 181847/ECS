@@ -116,7 +116,6 @@ inline EntityID EntityIter<COMPONENT_TYPES...>::operator*()
 template<typename ...COMPONENT_TYPES>
 inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator++()
 {
-	// TODO:
 	static EntityID internalStart = _currID;
 	static EntityID internalEnd = getInternalEnd();
 	static bool findAnotherOne;
@@ -148,8 +147,8 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 		}
 
 		// update the internalStart and ...End
-		internalStart = getInternalStart();
-		internalEnd = getInternalEnd();
+		internalStart	= getInternalStart();
+		internalEnd		= getInternalEnd();
 	}
 
 	_currID = _currID > _maxEntityCount ? 0 : _currID;
