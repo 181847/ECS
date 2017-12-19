@@ -197,6 +197,50 @@ int addComponentAndMask(
 	return error;
 }
 
+// checking one entity id that must have the component type,
+// and the component data must also be the same.
+template<typename COMPONENT_TYPE>
+int CheckComponentDataEqual(
+	ECS::ComponentManager<COMPONENT_TYPE>& pManager, 
+	ECS::EntityID id, 
+	const COMPONENT_TYPE& compareComponent)
+{
+	COMPONENT_TYPE* pComponent;
+	pComponent = pManager.getComponent(id);
+	if (EQ(nullptr, pComponent))
+	{
+		// one error
+		return 1;
+	}
+	else if (EQ(*pComponent, compareComponent))
+	{
+		// no error.
+		return 0;
+	}
+
+	// component data not equal, 
+	// one error.
+	return 1;
+}
+
+// check all the component with a container,
+// which implements the 'for range'.
+template<typename COMPONENT_TYPE, typename ID_CONTAINER>
+CheckComponentsResult CheckComponentDataEqual(
+	ECS::ComponentManager<COMPONENT_TYPE>& pManager,
+	ID_CONTAINER& idContainer,
+	const COMPONENT_TYPE& compareComponent)
+{
+	CheckComponentsResult result;
+	for (ECS::EntityID checkId : idContainer)
+	{
+		result.count++;
+		result.error += 
+			CheckComponentDataEqual<COMPONENT_TYPE>(pManager, checkId, compareComponent);
+	}
+	return result;
+}
+
 namespace TestUnit
 {
 	void GetReady()
@@ -462,120 +506,71 @@ namespace TestUnit
 				std::vector < std::vector<ECS::EntityID>> idListArray;
 				errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray, 8, 64, 128, 1, 2);
 				
-				// mask idList[0] with nothing
-				
-				// mask with IntComponet
-				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-					idListArray[ComponentNumber::IntC],				1);
-				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-					idListArray[ComponentNumber::Int_FloatC],		2);
-				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-					idListArray[ComponentNumber::Int_CharC],		3);
-				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-					idListArray[ComponentNumber::Int_Float_CharC],	4);
-
-				// mask with FloatComponent
-				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
-					idListArray[ComponentNumber::FloatC],				5.0f);
-				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
-					idListArray[ComponentNumber::Int_FloatC],			6.0f);
-				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
-					idListArray[ComponentNumber::Float_CharC],			7.0f);
-				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
-					idListArray[ComponentNumber::Int_Float_CharC],		8.0f);
-
-				// mask with CharComponent
-				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
-					idListArray[ComponentNumber::CharC],			'a');
-				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
-					idListArray[ComponentNumber::Int_CharC],		'b');
-				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
-					idListArray[ComponentNumber::Float_CharC],		'c');
-				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
-					idListArray[ComponentNumber::Int_Float_CharC],	'd');
-				
-				// here check the component mask is right
+				IntComponent sourceIntComponet(1);
+				FloatComponent sourceFloatComponet(2.2f);
+				CharComponent sourceCharComponet('a');
+				// add components
 				{
-					auto autoCheckComponentMask =
-						[&errorLogger, &idListArray](std::vector<size_t> numberList, CheckComponentsResult result)
-					{
-						size_t desiredCount = 0;
-						for (auto number : numberList)
-						{
-							desiredCount += idListArray[number].size();
-						}
-						errorLogger += result.error;
-						errorLogger.LogIfNotEq(result.count, desiredCount);
-					};
+					// mask with IntComponet
+					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+						idListArray[ComponentNumber::IntC], sourceIntComponet);
+					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+						idListArray[ComponentNumber::Int_FloatC], sourceIntComponet);
+					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+						idListArray[ComponentNumber::Int_CharC], sourceIntComponet);
+					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+						idListArray[ComponentNumber::Int_Float_CharC], sourceIntComponet);
 
-					// check all the entity that have IntComponent.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::IntC,
-						ComponentNumber::Int_FloatC,
-						ComponentNumber::Int_CharC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<IntComponent>>(eManager));
+					// mask with FloatComponent
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+						idListArray[ComponentNumber::FloatC], sourceFloatComponet);
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+						idListArray[ComponentNumber::Int_FloatC], sourceFloatComponet);
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+						idListArray[ComponentNumber::Float_CharC], sourceFloatComponet);
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+						idListArray[ComponentNumber::Int_Float_CharC], sourceFloatComponet);
 
-					// check all the entity that have FloatComponent.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::FloatC,
-						ComponentNumber::Int_FloatC,
-						ComponentNumber::Float_CharC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<FloatComponent>>(eManager));
+					// mask with CharComponent
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+						idListArray[ComponentNumber::CharC], sourceCharComponet);
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+						idListArray[ComponentNumber::Int_CharC], sourceCharComponet);
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+						idListArray[ComponentNumber::Float_CharC], sourceCharComponet);
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+						idListArray[ComponentNumber::Int_Float_CharC], sourceCharComponet);
+				}
 
-					// check all the entity that have CharComponent.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::CharC,
-						ComponentNumber::Int_CharC,
-						ComponentNumber::Float_CharC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<CharComponent>>(eManager));
+				// use idListArray to check each component data is right.
+				{
+					IntComponent invalidIntComponent(2);
+					FloatComponent invalidFloatComponent(3.3f);
+					CharComponent invalidCharComponent('b');
 
-					// check all the entity that have Int and Float Component.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::Int_FloatC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<IntComponent, FloatComponent>>(eManager));
+					CheckComponentsResult result;
+
+					result = CheckComponentDataEqual<IntComponent,  ECS::EntityRange<IntComponent>>(
+						intCManager, eManager->RangeEntities<IntComponent>(), sourceIntComponet);
+					errorLogger += result.error;
+					result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
+						floatManager, eManager->RangeEntities<FloatComponent>(), sourceFloatComponet);
+					errorLogger += result.error;
+					result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
+						charManager, eManager->RangeEntities<CharComponent>(), sourceCharComponet);
+					errorLogger += result.error;
 
 
-					// check all the entity that have Int and Char Component.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::Int_CharC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<IntComponent, CharComponent>>(eManager));
 
-					// check all the entity that have Float and Char Component.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::Float_CharC,
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<FloatComponent, CharComponent>>(eManager));
-
-					// check all the entity that have Float and Char Component.
-					autoCheckComponentMask(
-					{
-						ComponentNumber::Int_Float_CharC
-					},
-						checkMaskResultWithComponentContainer
-						<CMPS<IntComponent, FloatComponent, CharComponent>>(eManager));
+					result = CheckComponentDataEqual<IntComponent, ECS::EntityRange<IntComponent>>(
+						intCManager, eManager->RangeEntities<IntComponent>(), invalidIntComponent);
+					errorLogger.LogIfNotEq(result.count, result.error);
+					result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
+						floatManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
+					errorLogger.LogIfNotEq(result.count, result.error);
+					result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
+						charManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
+					errorLogger.LogIfNotEq(result.count, result.error);
 				}
 
 				errorLogger += destoryEntities(eManager, &totalIDList);
