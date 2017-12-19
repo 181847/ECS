@@ -612,21 +612,6 @@ void AddTestUnit()
 				>
 				(eManager, idListArray);
 
-			/*CheckComponentsResult checkResult;
-			checkResult =
-				checkMaskResultWithComponentContainer
-				<
-				CMPS<>,
-				CMPS< IntComponent>,
-				CMPS< FloatComponent>,
-				CMPS< CharComponent>,
-				CMPS< IntComponent, FloatComponent>,
-				CMPS< IntComponent, CharComponent>,
-				CMPS< FloatComponent, CharComponent>,
-				CMPS< IntComponent, FloatComponent, CharComponent>
-				>
-				(eManager);*/
-
 			enum ComponentNumber
 			{
 				None = 0,
