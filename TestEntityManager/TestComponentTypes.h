@@ -7,6 +7,7 @@ class IntComponent
 	:public ECS::BaseComponent
 {
 public:
+	IntComponent(int initD) :data(initD) {}
 	int data;
 };
 
@@ -14,6 +15,7 @@ class FloatComponent
 	:public ECS::BaseComponent
 {
 public:
+	FloatComponent(float initD) :data(initD) {}
 	float data;
 };
 
@@ -21,5 +23,6 @@ class CharComponent
 	:public ECS::BaseComponent
 {
 public:
+	CharComponent(char initD) :data(initD) {}
 	char data;
 };
