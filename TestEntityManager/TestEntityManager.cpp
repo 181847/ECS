@@ -375,45 +375,11 @@ void AddTestUnit()
 	{
 		TEST_UNIT_START("test traverse the entity.")
 			DeclareEntityManager(eManager);
-			
-			const size_t idListSizeSeed = 1;
-			const size_t dispatchIDSeed = 2;
-			
-			// multiply idLists
-			const size_t idListArrayCount	= 8;
-			// for each idList set a random size for it.
-			RandomTool::RandomSet<size_t> randomIdListSize;
-			randomIdListSize.setSeed(idListSizeSeed);
-			randomIdListSize.randomNumbers(idListArrayCount, 64, 128);
 
-			// allocate all the IDs for later use.
-			size_t totalIDCount = 0;
-			for (auto size : randomIdListSize)
-			{
-				totalIDCount += size;
-			}
 			std::vector<ECS::EntityID> totalIDList;
-			newEntitis(eManager, &totalIDList, totalIDCount);
+			std::vector<std::vector<ECS::EntityID>> idListArray;
 
-			// ready to randomly dispatch all the id to different idList
-			RandomTool::RandomSet<size_t> randomIDDisaptchIndices;
-			randomIDDisaptchIndices.setSeed(dispatchIDSeed);
-			randomIDDisaptchIndices.randomSequence(totalIDCount);
-			// init several idList
-			std::vector<std::vector<ECS::EntityID>> idListArray(idListArrayCount);
-			
-			// dispatch the ids
-			size_t randomDispatchIndexLocation = 0;
-			for (size_t idListNumber = 0; idListNumber < idListArrayCount; ++ idListNumber)
-			{
-				for (size_t dispatchCount = 0; dispatchCount < randomIdListSize[idListNumber]; ++dispatchCount)
-				{
-					// get the id.
-					ECS::EntityID id = totalIDList[randomIDDisaptchIndices[randomDispatchIndexLocation++]];
-					// dispatch it.
-					idListArray[idListNumber].push_back(id);
-				}
-			}
+			errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray);
 
 			errorLogger +=
 				maskIdListWithComponentContainer
@@ -429,17 +395,7 @@ void AddTestUnit()
 				>
 				(eManager, idListArray);
 
-			enum ComponentNumber
-			{
-				None = 0,
-				IntC,
-				FloatC,
-				CharC,
-				Int_FloatC,
-				Int_CharC,
-				Float_CharC,
-				Int_Float_CharC = 7
-			};
+			
 
 			auto autoCheckComponentMask =
 				[&errorLogger, &idListArray](std::vector<size_t> numberList, CheckComponentsResult result)
@@ -493,7 +449,7 @@ void AddTestUnit()
 				ComponentNumber::Int_Float_CharC
 				},
 				checkMaskResultWithComponentContainer
-					<CMPS<IntComponent, FloatComponent>>(eManager));
+				<CMPS<IntComponent, FloatComponent>>(eManager));
 			
 
 			// check all the entity that have Int and Char Component.
@@ -503,7 +459,7 @@ void AddTestUnit()
 				ComponentNumber::Int_Float_CharC
 				},
 				checkMaskResultWithComponentContainer
-					<CMPS<IntComponent, CharComponent>>(eManager));
+				<CMPS<IntComponent, CharComponent>>(eManager));
 
 			// check all the entity that have Float and Char Component.
 			autoCheckComponentMask(
@@ -512,7 +468,7 @@ void AddTestUnit()
 				ComponentNumber::Int_Float_CharC
 				},
 				checkMaskResultWithComponentContainer
-					<CMPS<FloatComponent, CharComponent>>(eManager));
+				<CMPS<FloatComponent, CharComponent>>(eManager));
 
 			// check all the entity that have Float and Char Component.
 			autoCheckComponentMask(
