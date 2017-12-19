@@ -201,7 +201,9 @@ namespace TestUnit
 {
 	void GetReady()
 	{
-
+		ECS::ComponentIDGenerator::newID<IntComponent>();
+		ECS::ComponentIDGenerator::newID<FloatComponent>();
+		ECS::ComponentIDGenerator::newID<CharComponent>();
 	}
 
 
@@ -426,7 +428,7 @@ namespace TestUnit
 				errorLogger += NOT_EQ(true, tacManager.removeComponent(id));
 			}
 
-			// check the deallocat count
+			// check the deallocate count
 			int aftherDeconstructCount = TestStructA::deconstructCount;
 			errorLogger += 
 				NOT_EQ(entityCount, aftherDeconstructCount - beforeDeconstructCount);
@@ -484,7 +486,7 @@ namespace TestUnit
 
 				// mask with CharComponent
 				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
-					idListArray[ComponentNumber::FloatC],			'a');
+					idListArray[ComponentNumber::CharC],			'a');
 				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
 					idListArray[ComponentNumber::Int_CharC],		'b');
 				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
