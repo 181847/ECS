@@ -9,6 +9,10 @@ class IntComponent
 public:
 	IntComponent(int initD) :data(initD) {}
 	int data;
+	bool operator == (const IntComponent & other)
+	{
+		return this->data == other.data;
+	}
 };
 
 class FloatComponent
@@ -17,6 +21,10 @@ class FloatComponent
 public:
 	FloatComponent(float initD) :data(initD) {}
 	float data;
+	bool operator == (const FloatComponent & other)
+	{
+		return this->data == other.data;
+	}
 };
 
 class CharComponent
@@ -25,4 +33,8 @@ class CharComponent
 public:
 	CharComponent(char initD) :data(initD) {}
 	char data;
+	bool operator == (const CharComponent & other)
+	{
+		return this->data == other.data;
+	}
 };
