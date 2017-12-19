@@ -190,3 +190,66 @@ inline CheckComponentsResult checkMaskResultWithComponentContainer(
 	bool arg[] = { (retResult += CMP_CONTAINER::HelpCheck(pManager), false)... };
 	return retResult;
 }
+
+inline int randomIdListArray(
+	ECS::EntityManager* pManager,
+	std::vector<ECS::EntityID>* pTotalIDList,				// all the id are in here.
+	std::vector<std::vector<ECS::EntityID>>* pIdListArray,	// get the dispatched ids
+	const size_t idListArrayCount = 8,
+	const size_t minListSize = 64,
+	const size_t maxListSize = 128,
+	const size_t idListSizeSeed = 1, 
+	const size_t dispatchIDSeed = 2)
+{
+	int error = 0;
+	pTotalIDList->clear();
+	pIdListArray->resize(idListArrayCount);
+	// for each idList set a random size for it.
+	RandomTool::RandomSet<size_t> randomIdListSize;
+	randomIdListSize.setSeed(idListSizeSeed);
+	randomIdListSize.randomNumbers(idListArrayCount, minListSize, maxListSize);
+
+	// allocate all the IDs for later use.
+	size_t totalIDCount = 0;
+	for (auto size : randomIdListSize)
+	{
+		totalIDCount += size;
+	}
+	error += newEntitis(pManager, pTotalIDList, totalIDCount);
+
+	// ready to randomly dispatch all the id to different idList
+	RandomTool::RandomSet<size_t> randomIDDisaptchIndices;
+	randomIDDisaptchIndices.setSeed(dispatchIDSeed);
+	randomIDDisaptchIndices.randomSequence(totalIDCount);
+
+	// dispatch the ids
+	size_t randomDispatchIndexLocation = 0;
+	for (size_t idListNumber = 0; idListNumber < idListArrayCount; ++idListNumber)
+	{
+		for (size_t dispatchCount = 0; dispatchCount < randomIdListSize[idListNumber]; ++dispatchCount)
+		{
+			// get the id.
+			ECS::EntityID id = (*pTotalIDList)[randomIDDisaptchIndices
+				[randomDispatchIndexLocation++]];
+			// dispatch it.
+			(*pIdListArray)[idListNumber].push_back(id);
+		}
+	}
+	return error;
+}
+
+// This enum is used in some component test,
+// in this test we can get multiple idList which is in a idListArray,
+// and mask them with different component type,
+// use this enum to access the idListArray
+enum ComponentNumber
+{
+	None = 0,
+	IntC,
+	FloatC,
+	CharC,
+	Int_FloatC,
+	Int_CharC,
+	Float_CharC,
+	Int_Float_CharC = 7
+};
