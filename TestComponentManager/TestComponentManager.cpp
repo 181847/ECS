@@ -7,6 +7,8 @@
 #include <MyTools\UnitTestModules.h>
 #include <MyTools\RandomTool.h>
 #include <vector>
+#include <TestEntityManager\TestComponentTypes.h>
+#include <TestEntityManager\TestEntityManagerTool.h>
 
 DECLARE_TEST_UNITS;
 
@@ -39,47 +41,7 @@ public:
 
 int TestStructA::deconstructCount = 0;
 const int TestStructA::initDataA = 2;
-const float TestStructA::initDataB = 2.222;
-
-// get batch Entities,
-// return errors count, (if no error, return 0)
-int newEntitis(
-	ECS::EntityManager* eManager, 
-	std::vector<ECS::EntityID> * idList, 
-	const size_t count)
-{
-	int error = 0;
-
-	idList->clear();
-	for (size_t i = 0; i < count; ++i)
-	{
-		ECS::EntityID newID = eManager->newEntity();
-		if (newID == 0)
-		{
-			++error;
-			break;
-		}
-		idList->push_back(newID);
-	}
-	
-	return error;
-}
-
-// destory the batch Entitys£¬ and clear the idList.
-// return errors count, (if no error, return 0)
-int destoryEntities(ECS::EntityManager* eManager, std::vector<ECS::EntityID> * idList)
-{
-	int error = 0;
-	for (ECS::EntityID id : *idList)
-	{
-		if (false == eManager->destoryEntity(id))
-		{
-			++error;
-		}
-	}
-	idList->clear();
-	return error;
-}
+const float TestStructA::initDataB = 2.222f;
 
 template<typename COMPONENT_TYPE>
 int newComponents(
@@ -101,7 +63,6 @@ int newComponents(
 	}
 	return error;
 }
-
 
 // the main process is to allocate entityID
 // and get a new component with the id, 
@@ -190,6 +151,50 @@ int randomTestCompnets(
 
 	return errorLogger.getErrorCount();
 	
+}
+
+// add one component to the entity,
+// and mask it,
+// return how many errors happened.
+template<typename COMPONENT_TYPE, typename...CONSTRUCT_ARGS>
+int addComponentAndMask(
+	ECS::EntityManager* eManager,
+	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
+	ECS::EntityID id,
+	CONSTRUCT_ARGS&& ...args
+)
+{
+	if (!eManager->isValid(id))
+	{
+		// one error, the id is not valid,
+		// quit the function immediately.
+		return 1;
+	}
+	int error = 0;
+	error += NOT_EQ(
+		ECS::MaskResultFlag::Success, 
+		eManager->maskComponentType<COMPONENT_TYPE>(id));
+
+	error += EQ(
+		nullptr, 
+		cManager.newComponnet(id, std::forward<CONSTRUCT_ARGS>(args)...));
+
+	return error;
+}
+
+template<typename COMPONENT_TYPE, typename...CONSTRUCT_ARGS>
+int addComponentAndMask(
+	ECS::EntityManager* eManager,
+	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
+	std::vector<ECS::EntityID>& idList,
+	CONSTRUCT_ARGS&& ...args)
+{
+	int error = 0;
+	for (auto & id : idList)
+	{
+		error += addComponentAndMask(eManager, cManager, id, std::forward<CONSTRUCT_ARGS>(args)...);
+	}
+	return error;
 }
 
 namespace TestUnit
@@ -329,7 +334,7 @@ namespace TestUnit
 			errorLogger += newEntitis(etManager, &idList, entityCount);
 			std::vector<TestStructA*> cmpList;
 			int nonDefaultDataA = 3;
-			float nonDefaultDataB = 4.2;
+			float nonDefaultDataB = 4.2f;
 			
 			// generate the components
 			for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
@@ -441,6 +446,140 @@ namespace TestUnit
 			errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
+		}
+
+		// Try to set Component with Entity Manager
+		{
+			TEST_UNIT_START("Try to set Component with Entity Manager")
+				DeclareComponentManager(intCManager,	IntComponent,	1024);
+				DeclareComponentManager(floatManager,	FloatComponent, 1024);
+				DeclareComponentManager(charManager,	CharComponent,	1024);
+				DeclareEntityManager(eManager);
+				
+				std::vector<ECS::EntityID> totalIDList;
+				std::vector < std::vector<ECS::EntityID>> idListArray;
+				errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray, 8, 64, 128, 1, 2);
+				
+				// mask idList[0] with nothing
+				
+				// mask with IntComponet
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::IntC],				1);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_FloatC],		2);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_CharC],		3);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_Float_CharC],	4);
+
+				// mask with FloatComponent
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					idListArray[ComponentNumber::FloatC],				5.0f);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					idListArray[ComponentNumber::Int_FloatC],			6.0f);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					idListArray[ComponentNumber::Float_CharC],			7.0f);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					idListArray[ComponentNumber::Int_Float_CharC],		8.0f);
+
+				// mask with CharComponent
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					idListArray[ComponentNumber::FloatC],			'a');
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					idListArray[ComponentNumber::Int_CharC],		'b');
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					idListArray[ComponentNumber::Float_CharC],		'c');
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					idListArray[ComponentNumber::Int_Float_CharC],	'd');
+				
+				// here check the component mask is right
+				{
+					auto autoCheckComponentMask =
+						[&errorLogger, &idListArray](std::vector<size_t> numberList, CheckComponentsResult result)
+					{
+						size_t desiredCount = 0;
+						for (auto number : numberList)
+						{
+							desiredCount += idListArray[number].size();
+						}
+						errorLogger += result.error;
+						errorLogger.LogIfNotEq(result.count, desiredCount);
+					};
+
+					// check all the entity that have IntComponent.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::IntC,
+						ComponentNumber::Int_FloatC,
+						ComponentNumber::Int_CharC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<IntComponent>>(eManager));
+
+					// check all the entity that have FloatComponent.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::FloatC,
+						ComponentNumber::Int_FloatC,
+						ComponentNumber::Float_CharC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<FloatComponent>>(eManager));
+
+					// check all the entity that have CharComponent.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::CharC,
+						ComponentNumber::Int_CharC,
+						ComponentNumber::Float_CharC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<CharComponent>>(eManager));
+
+					// check all the entity that have Int and Float Component.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::Int_FloatC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<IntComponent, FloatComponent>>(eManager));
+
+
+					// check all the entity that have Int and Char Component.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::Int_CharC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<IntComponent, CharComponent>>(eManager));
+
+					// check all the entity that have Float and Char Component.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::Float_CharC,
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<FloatComponent, CharComponent>>(eManager));
+
+					// check all the entity that have Float and Char Component.
+					autoCheckComponentMask(
+					{
+						ComponentNumber::Int_Float_CharC
+					},
+						checkMaskResultWithComponentContainer
+						<CMPS<IntComponent, FloatComponent, CharComponent>>(eManager));
+				}
+
+				errorLogger += destoryEntities(eManager, &totalIDList);
+				return errorLogger.conclusion();
+		TEST_UNIT_END;
+
 		}
 	}
 }
