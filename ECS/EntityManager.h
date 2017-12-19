@@ -25,13 +25,13 @@ public:
 
 public:
 
-	// singlton
+	// singleton
 	static EntityManager* getInstance();
 
 	// get a new Entity and return its ID.
 	EntityID	newEntity();
 
-	// destory the Entity.
+	// destroy the Entity.
 	bool		destoryEntity(EntityID destoriedID);
 
 	// check if the checkID is a valid id;
@@ -95,6 +95,8 @@ inline MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
 	}
 
 	//TODO: here waste one bit in the lower bitset, it can be improved in the future.
+	// Or here can just make it stand for the invalid component mask
+	// now just left it.
 	_maskPool[entityID] |= maskForTheComponentType;
 
 	return MaskResultFlag::Success;
