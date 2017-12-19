@@ -118,12 +118,14 @@
     <ClInclude Include="BaseComponent.h" />
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
+    <ClInclude Include="EntityDesigner.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="EntityManagerTool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseComponent.cpp" />
     <ClCompile Include="ECS.cpp" />
+    <ClCompile Include="EntityDesigner.cpp" />
     <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
