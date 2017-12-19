@@ -28,7 +28,7 @@ public:
 	~ComponentManager();
 
 	// generate  a new component with the entityID,
-	// pass all the rest arugment to the component's constructor.
+	// pass all the rest argument to the component's constructor.
 	template<typename ...CONSTRUCT_ARGS>
 	COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
 	// Get Component pointer through entityID, if not exist, return nullptr.

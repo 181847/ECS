@@ -364,7 +364,7 @@ namespace TestUnit
 		TEST_UNIT_END;
 		}
 
-		// can the entityID be set into the componet?
+		// can the entityID be set into the component?
 		{
 		TEST_UNIT_START("can the entityID be set into the componet?")
 
@@ -402,7 +402,7 @@ namespace TestUnit
 			std::vector<TestStructA*> cmpList;
 			std::vector<ECS::EntityID> idList;
 
-			const size_t entityCount = 100;				// avaliable entities
+			const size_t entityCount = 100;				// available entities
 			// allocate the ids
 			errorLogger += newEntitis(etManager, &idList, entityCount);
 			// allocate the components
