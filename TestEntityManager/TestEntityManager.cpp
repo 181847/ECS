@@ -87,9 +87,9 @@ void AddTestUnit()
 	TEST_UNIT_END;
 	}// test Unit create EntityManager
 
-	// test Unit generat ID, and random destoried
+	// test Unit generate ID, and random destroy
 	{
-	TEST_UNIT_START("generat ID, and random destoried")
+	TEST_UNIT_START("generate ID, and random destroy")
 		int error = 0;
 		DeclareEntityManager(eManager);
 		error += testEntityManager(eManager);
