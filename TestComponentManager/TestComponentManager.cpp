@@ -494,9 +494,9 @@ namespace TestUnit
 		TEST_UNIT_END;
 		}
 
-		// Try to set Component with Entity Manager
+		// traverser components with Entity Manager
 		{
-			TEST_UNIT_START("Try to set Component with Entity Manager")
+			TEST_UNIT_START("traverser components with Entity Manager")
 				DeclareComponentManager(intCManager,	IntComponent,	1024);
 				DeclareComponentManager(floatCManager,	FloatComponent, 1024);
 				DeclareComponentManager(charCManager,	CharComponent,	1024);
