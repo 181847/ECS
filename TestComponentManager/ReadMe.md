@@ -1,6 +1,8 @@
 ﻿## 测试项目
-### 测试目标： Componentmanager
+### 测试目标： ComponentManager
 检查ComonentManager的相关功能。
+*以下文字中提到的manager默认指的是**ComponentManager***
+
 
 测试单元序号	| 相关文字	| 解释
 ----|----|------
