@@ -4,15 +4,16 @@
 
 测试单元序号	| 相关文字	| 解释
 ----|----|------
-1	|test errorLogger, this is not the test about ComponentManager.| 这个测试单元与本项目基本无关，只是用来测试一下新加入测试工具的类
-2 | create a ComponentManager with TestStructA	|	创建几个EntityID，然后在一个包含TestStructA的manager中创建组件实例，检查创建是否成功
-3 |	get component from ComponentManager | 创建Entity，TestStructA类型的组件，使用EntityID从Manager中获取组件指针，检查能否获取成功
-4 | get component from ComponentManager using the operator [] | 使用数组下标重载获取组件指针的函数，方便调用。
-5 |	can pass the argument to the component constructor?	|	测试在创建Component的时候能否将传入的其他参数完美转发到TestStructA的构造函数中
-6 | can the entityID be set into the component?	|	测试新创建的Component是否被正确设置EntityID。
-7 | ensure that when we remove the entityID from the componentManager, the deconstructor is called	| 测试使用manager删除组件的时候，析构函数能够被正常调用。
-8 | random test on componentManager	|	使用大量随机的EntityID创建Component，测试Component是否成功创建，并且循环测试多次。
-9 |	traverser components wit
+1 | always success test unit	| 和项目无关的单元，总是成功
+2 | check IDGenerator's newID() and getID()	|	和EntityManager无关的测试单元，用于测试IDGenerator能够根据不同的类型返回不同的ID值
+3 |	create EntityManager	|	测试能否创建和获取EntityManager，简单地从里面分配一个EntityID。
+4 | generate ID, and random destroy	|	创建ID并且随机释放测试。
+5 | test checkInvalid EntityID	| 检测EntityManager检测ID是否激活的功能，创建一组ID，将其中一部分删除，检测EntityManager能否对删除的和未删除的作出正确判断。
+6 | test componentMask use EntityManager	|	测试EntityManager为Entity蒙版组件类型的功能，首先对IDList分成两个部分，分别蒙版不同的类型，接着对前一个部分蒙版重复类型，查看能否返回*冗余信号*， 后一部分蒙版新类型，查看能否返回成功。
+7 | get mask of components	|	这个测试单元**不是**对应EntityManager的功能，而是用来测试ECS命名空间下的一个函数能否返回正确的组件类型蒙版。
+8 |	check componentType of the entity	|	测试EntityManager\:\:haveComponent()函数能否正确判断实体所包含的组件类型。
+9 | get entityIter	|	简单的测试一个EntityManager::RangeEntities()的返回情况，实际作用不大
+10 |	test traverse the entity.	|	测试EntityManager遍历指定组件类型Entity的功能，首先创建随机entityID， 接着蒙版不同的Component类型，在遍历的过程中检查相应的组件数量是否和创建的一致。
 
 #### 其他可用文件：
 ##### TestComponentTypes.h  
