@@ -498,12 +498,62 @@ namespace TestUnit
 		{
 			TEST_UNIT_START("Try to set Component with Entity Manager")
 				DeclareComponentManager(intCManager,	IntComponent,	1024);
-				DeclareComponentManager(floatManager,	FloatComponent, 1024);
-				DeclareComponentManager(charManager,	CharComponent,	1024);
+				DeclareComponentManager(floatCManager,	FloatComponent, 1024);
+				DeclareComponentManager(charCManager,	CharComponent,	1024);
 				DeclareEntityManager(eManager);
 				
 				std::vector<ECS::EntityID> totalIDList;
 				std::vector < std::vector<ECS::EntityID>> idListArray;
+				using CN = ComponentNumber;
+				// help function to get the entity count who have the components.
+				// for instance, pass in CN::IntC, it will return the count that entity coutn
+				// that have the IntComponent.
+				auto getEntityNumberOfComponents = [&](CN type) ->size_t
+				{
+					static size_t singleInt				= idListArray[CN::IntC].size();
+					static size_t singleFloat			= idListArray[CN::FloatC].size();
+					static size_t singleChar			= idListArray[CN::CharC].size();
+					static size_t combInt_Float			= idListArray[CN::Int_FloatC].size();
+					static size_t combInt_Char			= idListArray[CN::Int_CharC].size();
+					static size_t combFloat_Char		= idListArray[CN::Float_CharC].size();
+					static size_t combInt_Float_Char	= idListArray[CN::Int_Float_CharC].size();
+
+					switch (type)
+					{
+					case CN::IntC:
+						return singleInt + combInt_Char + combInt_Float + combInt_Float_Char;
+						break;
+						
+					case CN::FloatC:
+						return singleFloat + combInt_Float + combFloat_Char + combInt_Float_Char;
+						break;
+
+					case CN::CharC:
+						return singleChar + combInt_Char + combFloat_Char + combInt_Float_Char;
+						break;
+
+					case CN::Int_FloatC:
+						return combInt_Float + combInt_Float_Char;
+						break;
+
+					case CN::Int_CharC:
+						return combInt_Char + combInt_Float_Char;
+						break;
+
+					case CN::Float_CharC:
+						return combFloat_Char + combInt_Float_Char;
+						break;
+
+					case CN::Int_Float_CharC:
+						return combInt_Float_Char;
+						break;
+
+					default:
+						ASSERT(false && "error componet type");
+						return 0;
+						break;
+					}
+				};
 				errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray, 8, 64, 128, 1, 2);
 				
 				IntComponent sourceIntComponet(1);
@@ -522,27 +572,28 @@ namespace TestUnit
 						idListArray[ComponentNumber::Int_Float_CharC], sourceIntComponet);
 
 					// mask with FloatComponent
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
 						idListArray[ComponentNumber::FloatC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
 						idListArray[ComponentNumber::Int_FloatC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
 						idListArray[ComponentNumber::Float_CharC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatManager,
+					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
 						idListArray[ComponentNumber::Int_Float_CharC], sourceFloatComponet);
 
 					// mask with CharComponent
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
 						idListArray[ComponentNumber::CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
 						idListArray[ComponentNumber::Int_CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
 						idListArray[ComponentNumber::Float_CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charManager,
+					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
 						idListArray[ComponentNumber::Int_Float_CharC], sourceCharComponet);
 				}
 
-				// use idListArray to check each component data is right.
+				// use EntityManager.RangeEntities() method to iterate all the entities
+				// that have the component .
 				{
 					IntComponent invalidIntComponent(2);
 					FloatComponent invalidFloatComponent(3.3f);
@@ -550,15 +601,61 @@ namespace TestUnit
 
 					CheckComponentsResult result;
 
-					result = CheckComponentDataEqual<IntComponent,  ECS::EntityRange<IntComponent>>(
+					// single component traverser. 
+					result = CheckComponentDataEqual(
 						intCManager, eManager->RangeEntities<IntComponent>(), sourceIntComponet);
 					errorLogger += result.error;
-					result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
-						floatManager, eManager->RangeEntities<FloatComponent>(), sourceFloatComponet);
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::IntC));
+					result = CheckComponentDataEqual(
+						floatCManager, eManager->RangeEntities<FloatComponent>(), sourceFloatComponet);
 					errorLogger += result.error;
-					result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
-						charManager, eManager->RangeEntities<CharComponent>(), sourceCharComponet);
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::FloatC));
+					result = CheckComponentDataEqual(
+						charCManager, eManager->RangeEntities<CharComponent>(), sourceCharComponet);
 					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::CharC));
+					// multiple component traverser.
+					// int - float
+					result = CheckComponentDataEqual(
+						intCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceIntComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
+					result = CheckComponentDataEqual(
+						floatCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceFloatComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
+					// int - char
+					result = CheckComponentDataEqual(
+						intCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceIntComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
+					result = CheckComponentDataEqual(
+						charCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceCharComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
+					// float - char
+					result = CheckComponentDataEqual(
+						floatCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceFloatComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
+					result = CheckComponentDataEqual(
+						charCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceCharComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
+					// int - float - char
+					result = CheckComponentDataEqual(
+						intCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceIntComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
+					result = CheckComponentDataEqual(
+						floatCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceFloatComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
+					result = CheckComponentDataEqual(
+						charCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceCharComponet);
+					errorLogger += result.error;
+					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
+					
 
 
 
@@ -566,10 +663,10 @@ namespace TestUnit
 						intCManager, eManager->RangeEntities<IntComponent>(), invalidIntComponent);
 					errorLogger.LogIfNotEq(result.count, result.error);
 					result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
-						floatManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
+						floatCManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
 					errorLogger.LogIfNotEq(result.count, result.error);
 					result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
-						charManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
+						charCManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
 					errorLogger.LogIfNotEq(result.count, result.error);
 				}
 
