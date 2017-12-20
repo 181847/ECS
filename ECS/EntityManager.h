@@ -105,16 +105,36 @@ inline MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
 template<typename ...COMPONENT_TYPES>
 inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
+	ASSERT(isValid(entityID));
+#ifdef _DEBUG
+	static const size_t cmpLength = sizeof...(COMPONENT_TYPES);
+	// be aware there is always a zero in the front, in case the COMPONTNE_TYPES is zero which make the length of the array zero.
+	static ComponentTypeID cmpIDArr[] = { (0), (ComponentIDGenerator::getID<COMPONENT_TYPES>())... };
+	for (size_t i = 1; i <= cmpLength; ++i)
+	{
+		ASSERT(cmpIDArr[i] != 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
+	}
+#endif
 	MaskResult result = 0;
-
 	// in the case that there is no ComponentTypes passed in,
 	// just return success.
-	if (sizeof...(COMPONENT_TYPES) == 0)
+	if (cmpLength == 0)
 	{
 		result = MaskResultFlag::Success;
 		return result;
 	}
-	bool zeros[] = { (false), (result |= maskSingleComponentType<COMPONENT_TYPES>(entityID), false)... };
+
+	ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
+
+	// does the entity already have some of the componentType?
+	if ((_maskPool[entityID] & combinedMask).any())
+	{
+		result |= MaskResultFlag::RedundancyComponent;
+	}
+
+	_maskPool[entityID] |= combinedMask;
+	result |= MaskResultFlag::Success;
+
 	return result;
 }
 
