@@ -76,14 +76,14 @@ inline MaskResult EntityManager::maskSingleComponentType(EntityID entityID)
 #ifdef _DEBUG
 	// if in the debug mode.
 	// use a static var to store the componentTypeID.
-	static ComponentTypeID idForTheComponentType =
+	static const ComponentTypeID idForTheComponentType =
 		ComponentIDGenerator::getID<COMPONENT_TYPE>();
 	// the id must greater than 0;
 	ASSERT(idForTheComponentType > 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
 
 	// always use a static var to store the mask for the component type.
 	// 1ull means 'number one whose type is unsigned long long'
-	static ComponentMask maskForTheComponentType{1ull << idForTheComponentType };
+	static const ComponentMask maskForTheComponentType{1ull << idForTheComponentType };
 #else
 	static ComponentMask maskForTheComponentType(1ull << ComponentIDGenerator::getID<LAST_COMPONENT_TYPE>());
 #endif
@@ -107,25 +107,43 @@ inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 {
 	ASSERT(isValid(entityID));
 #ifdef _DEBUG
-	static const size_t cmpLength = sizeof...(COMPONENT_TYPES);
-	// be aware there is always a zero in the front, in case the COMPONTNE_TYPES is zero which make the length of the array zero.
-	static ComponentTypeID cmpIDArr[] = { (0), (ComponentIDGenerator::getID<COMPONENT_TYPES>())... };
-	for (size_t i = 1; i <= cmpLength; ++i)
-	{
-		ASSERT(cmpIDArr[i] != 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
-	}
+	
+	// Using the initialization of the array to 
+	// check each component type is registered before this function called.
+	// Make it 'static const' so the check only have to do once.
+	static const ComponentTypeID cmpIDArr[] = 
+	{ 
+		// place holder for the array.
+		ComponentTypeID(0),
+
+		(
+			// for each component type, 
+			// get its id and check if it > 0,
+			// if not, it means the type haven't been registered until now.
+			// Please ensure you call ComponentIDGenerator::newID<COMPONENT_TYPES>() before this function is called.
+			ASSERT(ComponentIDGenerator::getID<COMPONENT_TYPES>() != 0 
+				&& "no ID found with the ComponentType")
+			,
+
+			// place holder for the array.
+			ComponentTypeID(0)
+		)... // Expend variadic templates parameters.
+	};
 #endif
-	MaskResult result = 0;
-	// in the case that there is no ComponentTypes passed in,
-	// just return success.
-	if (cmpLength == 0)
+
+	// Pre store the mask of the specific combination of the multiple component types.
+	static const ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
+
+	// In the case that there is no ComponentTypes passed in,
+	// the combinedMask shouble be like "0000001" which means the last bit moved zero step,
+	// and there is not any componet type information in it.
+	// Just return success.
+	if (combinedMask == 1)
 	{
-		result = MaskResultFlag::Success;
-		return result;
+		return MaskResultFlag::Success;
 	}
 
-	ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
-
+	MaskResult result = 0;
 	// does the entity already have some of the componentType?
 	if ((_maskPool[entityID] & combinedMask).any())
 	{
@@ -141,20 +159,17 @@ inline MaskResult EntityManager::maskComponentType(EntityID entityID)
 template<typename ...COMPONENT_TYPES>
 inline bool EntityManager::haveComponent(EntityID entityID)
 {
-	if (isValid(entityID))
+	ASSERT(isValid(entityID));
+	const ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
+
+	if ((_maskPool[entityID] & combinedMask) == combinedMask)
 	{
-		ComponentMask mask(0);
-		// get all the mask.
-		bool args[] = { 
-			(false), // in case that the COMPONENT_TYPES is zero.
-			(mask |= 1ull << 
-			ComponentIDGenerator::getID<COMPONENT_TYPES>(), false)... };
-		if ((_maskPool[entityID] & mask) == mask)
-		{
-			return true;
-		}
+		return true;
 	}
-	return false;
+	else
+	{
+		return false;
+	}
 }
 
 template<typename ...COMPONENT_TYPES>
