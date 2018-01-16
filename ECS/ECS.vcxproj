@@ -78,7 +78,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TOGGLE_ALL_DEBUG_MESSAGE;USE_SYS_ASSERT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,13 +118,18 @@
     <ClInclude Include="BaseComponent.h" />
     <ClInclude Include="ComponentManager.h" />
     <ClInclude Include="ECS.h" />
+    <ClInclude Include="ECSWorld.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="EntityManagerTool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseComponent.cpp" />
     <ClCompile Include="ECS.cpp" />
+    <ClCompile Include="ECSWorld.cpp" />
     <ClCompile Include="EntityManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
