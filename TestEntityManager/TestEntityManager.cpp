@@ -11,7 +11,7 @@
 DECLARE_TEST_UNITS;
 
 #define DeclareEntityManager(managerName)\
-	ECS::EntityManager* managerName = ECS::EntityManager::getInstance()
+	auto * managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
 
 
 namespace TestUnit

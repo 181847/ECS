@@ -5,11 +5,16 @@
 #include <MyTools/RandomTool.h>
 #include <MyTools/UnitTestModules.h>
 
+// this struct limit an entity manager's max entity count.
+struct TestEnityTrait {
+	static const size_t MaxEntityCount = 2048;
+};
+
 
 // get batch Entities,
 // return errors count, (if no error, return 0)
 int newEntitis(
-	ECS::EntityManager* eManager,
+	ECS::EntityManager<TestEnityTrait>* eManager,
 	std::vector<ECS::EntityID> * idList,
 	const size_t count)
 {
@@ -33,7 +38,7 @@ int newEntitis(
 // destory the batch Entitys£¬ and clear the idList.
 // return errors count, (if no error, return 0)
 int destoryEntities(
-	ECS::EntityManager* eManager,
+	ECS::EntityManager<TestEnityTrait>* eManager,
 	std::vector<ECS::EntityID> * idList)
 {
 	int error = 0;
@@ -50,7 +55,7 @@ int destoryEntities(
 
 // random allocate entityID, and random delete them.
 inline int testEntityManager(
-	ECS::EntityManager* pManager,
+	ECS::EntityManager<TestEnityTrait>* pManager,
 	const size_t batchSize = 100,
 	const bool randomPerBatch = false,
 	const size_t loopTime = 20,
@@ -100,7 +105,7 @@ inline int testEntityManager(
 
 template<typename ...COMPONENT_TYPES>
 inline int maskIdListWithComponentTypes(
-	ECS::EntityManager* pManager,
+	ECS::EntityManager<TestEnityTrait>* pManager,
 	const std::vector<ECS::EntityID>& idList)
 {
 	int error = 0;
@@ -129,7 +134,7 @@ public:
 };
 
 template<typename ...CHECK_COMPONENT_TYPES>
-inline CheckComponentsResult HelpTraverseEntities(ECS::EntityManager* pManager)
+inline CheckComponentsResult HelpTraverseEntities(ECS::EntityManager<TestEnityTrait>* pManager)
 {
 	CheckComponentsResult resultSum;
 	auto range = pManager->RangeEntities<CHECK_COMPONENT_TYPES...>();
@@ -150,14 +155,14 @@ template<typename ...COMPONENT_TYPES>
 struct ComponentTypeContainer {
 public:
 	static inline int maskIdList(
-		ECS::EntityManager* pManager,
+		ECS::EntityManager<TestEnityTrait>* pManager,
 		const std::vector<ECS::EntityID>& idList)
 	{
 		return maskIdListWithComponentTypes<COMPONENT_TYPES...>(pManager, idList);
 	}
 
 	static CheckComponentsResult HelpCheck(
-		ECS::EntityManager* pManager)
+		ECS::EntityManager<TestEnityTrait>* pManager)
 	{
 		return HelpTraverseEntities<COMPONENT_TYPES...>(pManager);
 	}
@@ -168,7 +173,7 @@ ComponentTypeContainer<CMP_TYPES...>;
 
 template<typename ...CMP_CONTAINER>
 inline int maskIdListWithComponentContainer(
-	ECS::EntityManager* pManager,
+	ECS::EntityManager<TestEnityTrait>* pManager,
 	const std::vector<std::vector<ECS::EntityID>>& idListArray)
 {
 	int error = 0;
@@ -184,7 +189,7 @@ inline int maskIdListWithComponentContainer(
 
 template<typename...CMP_CONTAINER>
 inline CheckComponentsResult checkMaskResultWithComponentContainer(
-	ECS::EntityManager* pManager)
+	ECS::EntityManager<TestEnityTrait>* pManager)
 {
 	CheckComponentsResult retResult;
 	bool arg[] = { (retResult += CMP_CONTAINER::HelpCheck(pManager), false)... };
@@ -192,7 +197,7 @@ inline CheckComponentsResult checkMaskResultWithComponentContainer(
 }
 
 inline int randomIdListArray(
-	ECS::EntityManager* pManager,
+	ECS::EntityManager<TestEnityTrait>* pManager,
 	std::vector<ECS::EntityID>* pTotalIDList,				// all the id are in here.
 	std::vector<std::vector<ECS::EntityID>>* pIdListArray,	// get the dispatched ids
 	const size_t idListArrayCount = 8,
