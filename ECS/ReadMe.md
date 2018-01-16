@@ -61,3 +61,7 @@ COMPONENT_TYPE *	operator \[\](EntityID entityID)  |  数组下标操作符重�
 bool removeComponent(EntityID removedID)  |  删除对应EntityID的Component指针，并且负责释放其内存（调用delete函数），如果删除失败（不存在对应组件），返回false，否则返回true。
 size_t getMaxSize()  |  获取能够分配的component的最大数量
 size_t getUsedCount()  |  获取已分配的component数量
+
+
+## 使用
+对于任意一种组件（Component）都需要事先为其声明一个ComponentID。
