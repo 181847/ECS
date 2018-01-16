@@ -38,3 +38,16 @@ public:
 		return this->data == other.data;
 	}
 };
+
+class DoubleComponent
+	:public ECS::BaseComponent
+{
+public:
+	DoubleComponent(double initD) :_data(initD) {}
+	double _data;
+	bool operator == (const DoubleComponent & other)
+	{
+		return this->_data == other._data;
+	}
+};
+
