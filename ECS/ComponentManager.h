@@ -31,7 +31,7 @@ class ComponentManager
 	// and hide it from outside the ComponentManager.
 {
 public:
-	ComponentManager(size_t maxSize);
+	ComponentManager();
 	~ComponentManager();
 
 	// generate  a new component with the entityID,
@@ -44,20 +44,17 @@ public:
 	COMPONENT_TYPE *	operator [](EntityID entityID);
 	// delete the component use the EntityID.
 	bool					removeComponent(EntityID removedID);
-	std::size_t				getMaxSize();
-	std::size_t				getUsedCount();
+	std::size_t				getMaxSize() const;
+	std::size_t				getUsedCount() const;
 
 private:
-	// the max available component count
-	std::size_t						_maxSize;
 	std::size_t						_usedComponentCount;
 	static const ComponentTypeID	_TypeID		= ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
 	std::unordered_map<EntityID, COMPONENT_TYPE*> _lookUpTable;
 };
 
 template<typename COMPONENT_TYPE, typename Traits>
-inline ComponentManager<COMPONENT_TYPE, Traits>::ComponentManager(size_t maxSize)
-	:_maxSize(maxSize)
+inline ComponentManager<COMPONENT_TYPE, Traits>::ComponentManager()
 {
 }
 
@@ -108,13 +105,13 @@ inline bool ComponentManager<COMPONENT_TYPE, Traits>::removeComponent(EntityID r
 }
 
 template<typename COMPONENT_TYPE, typename Traits>
-inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getMaxSize()
+inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getMaxSize() const
 {
-	return _maxSize;
+	return Traits::MaxSize;
 }
 
 template<typename COMPONENT_TYPE, typename Traits>
-inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getUsedCount()
+inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getUsedCount() const
 {
 	return _usedComponentCount;
 }
