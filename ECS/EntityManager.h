@@ -391,7 +391,6 @@ template<typename Traits>
 EntityManager<Traits>::EntityManager()
 	: _usedID(0)
 {
-	static_assert(Traits::MaxEntityCount > 0);
 	_freeList = new EntityFreeBlock();
 	_freeList->start = 1;
 	_freeList->end = Traits::MaxEntityCount;
