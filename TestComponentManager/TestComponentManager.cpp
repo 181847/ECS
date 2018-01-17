@@ -13,8 +13,8 @@
 DECLARE_TEST_UNITS;
 
 const int gComponentMaxSize = 1024;
-#define DeclareComponentManager(managerName, ComponentType, MaxSize)\
-	ECS::ComponentManager<ComponentType> managerName(MaxSize)
+#define DeclareComponentManager(managerName, ComponentType)\
+	ECS::ComponentManager<ComponentType> managerName
 
 #define DeclareEntityManager(managerName)\
 	ECS::EntityManager<TestEnityTrait>* managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
@@ -295,7 +295,7 @@ namespace TestUnit
 		TEST_UNIT_START("create a ComponentManager with TestStructA")
 			int error = 0;
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 
 			std::vector<ECS::EntityID> idList;
 			const size_t entityCount = 6;
@@ -318,7 +318,7 @@ namespace TestUnit
 		{
 		TEST_UNIT_START("get component from ComponentManager")
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 
 			std::vector<ECS::EntityID> idList;
 			const size_t entityCount = 6;
@@ -344,7 +344,7 @@ namespace TestUnit
 		{
 		TEST_UNIT_START("get component from ComponentManager using the operator []")
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 
 			std::vector<ECS::EntityID> idList;
 			const size_t entityCount = 6;
@@ -370,7 +370,7 @@ namespace TestUnit
 		{
 		TEST_UNIT_START("can pass the argument to the component constructor?")
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 
 			std::vector<ECS::EntityID> idList;
 			size_t idIndex = 0;
@@ -420,7 +420,7 @@ namespace TestUnit
 		TEST_UNIT_START("can the entityID be set into the componet?")
 
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 			RandomTool::RandomSet<size_t> randomIndices;
 			std::vector<TestStructA*> cmpList;
 			std::vector<ECS::EntityID> idList;
@@ -447,7 +447,7 @@ namespace TestUnit
 		{
 		TEST_UNIT_START("ensure that when we remove the entityID from the componentManager, the deconstructor is called")
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 			int beforeDeconstructCount = TestStructA::deconstructCount;
 			RandomTool::RandomSet<size_t> randomIndices;
 			std::vector<TestStructA*> cmpList;
@@ -487,7 +487,7 @@ namespace TestUnit
 		{
 		TEST_UNIT_START("random test on componentManager")
 			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA, gComponentMaxSize);
+			DeclareComponentManager(tacManager, TestStructA);
 
 			errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
 			return errorLogger.conclusion();
@@ -497,9 +497,9 @@ namespace TestUnit
 		// traverser components with Entity Manager
 		{
 			TEST_UNIT_START("traverser components with Entity Manager")
-				DeclareComponentManager(intCManager,	IntComponent,	1024);
-				DeclareComponentManager(floatCManager,	FloatComponent, 1024);
-				DeclareComponentManager(charCManager,	CharComponent,	1024);
+				DeclareComponentManager(intCManager,	IntComponent);
+				DeclareComponentManager(floatCManager,	FloatComponent);
+				DeclareComponentManager(charCManager,	CharComponent);
 				DeclareEntityManager(eManager);
 				
 				std::vector<ECS::EntityID> totalIDList;
