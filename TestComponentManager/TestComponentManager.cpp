@@ -243,440 +243,435 @@ CheckComponentsResult CheckComponentDataEqual(
 
 namespace TestUnit
 {
-	void GetReady()
+
+void GetReady()
+{
+}
+
+void AfterTest()
+{
+}
+
+void AddTestUnit()
+{
+	// test errorLogger, this is not the test about ComponentManager.
 	{
-		/*ECS::ComponentIDGenerator::newID<IntComponent>();
-		ECS::ComponentIDGenerator::newID<FloatComponent>();
-		ECS::ComponentIDGenerator::newID<CharComponent>();*/
-	}
+	TEST_UNIT_START("test errorLogger, this is not the test about ComponentManager.")
+		int error = 0;
 
+		error += NOT_EQ(0, errorLogger.getErrorCount());
 
-	void AfterTest()
-	{
+		errorLogger++;
+		error += NOT_EQ(1, errorLogger.getErrorCount());
 
-	}
+		++errorLogger;
+		error += NOT_EQ(2, errorLogger.getErrorCount());
 
-	void AddTestUnit()
-	{
-		// test errorLogger, this is not the test about ComponentManager.
-		{
-		TEST_UNIT_START("test errorLogger, this is not the test about ComponentManager.")
-			int error = 0;
+		errorLogger.tick();
+		error += NOT_EQ(3, errorLogger.getErrorCount());
 
-			error += NOT_EQ(0, errorLogger.getErrorCount());
+		errorLogger += 1;
+		error += NOT_EQ(4, errorLogger.getErrorCount());
 
-			errorLogger++;
-			error += NOT_EQ(1, errorLogger.getErrorCount());
+		errorLogger += 2;
+		error += NOT_EQ(6, errorLogger.getErrorCount());
 
-			++errorLogger;
-			error += NOT_EQ(2, errorLogger.getErrorCount());
+		errorLogger.addErrorCount(1);
+		error += NOT_EQ(7, errorLogger.getErrorCount());
 
-			errorLogger.tick();
-			error += NOT_EQ(3, errorLogger.getErrorCount());
-
-			errorLogger += 1;
-			error += NOT_EQ(4, errorLogger.getErrorCount());
-
-			errorLogger += 2;
-			error += NOT_EQ(6, errorLogger.getErrorCount());
-
-			errorLogger.addErrorCount(1);
-			error += NOT_EQ(7, errorLogger.getErrorCount());
-
-			errorLogger.addErrorCount(2);
-			error += NOT_EQ(9, errorLogger.getErrorCount());
+		errorLogger.addErrorCount(2);
+		error += NOT_EQ(9, errorLogger.getErrorCount());
 			
-			return EQ(0, error);
-		TEST_UNIT_END;
-		}
+		return EQ(0, error);
+	TEST_UNIT_END;
+	}
 
-		// create a ComponentManager with TestStructA
+	// create a ComponentManager with TestStructA
+	{
+	TEST_UNIT_START("create a ComponentManager with TestStructA")
+		int error = 0;
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+
+		std::vector<ECS::EntityID> idList;
+		const size_t entityCount = 6;
+		// allocate the ids 
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		std::vector<TestStructA*> componentList;
+
+		error += newComponents(tacManager, idList, &componentList);
+
+		error += NOT_EQ(idList.size(), componentList.size());
+
+		// deallcote the ids, because the etManager is global¡£
+		errorLogger += destoryEntities(etManager, &idList);
+
+		return error == 0;
+	TEST_UNIT_END;
+	}
+
+	// get component from ComponentManager 
+	{
+	TEST_UNIT_START("get component from ComponentManager")
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+
+		std::vector<ECS::EntityID> idList;
+		const size_t entityCount = 6;
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		std::vector<TestStructA*> componentList;
+
+
+		errorLogger += newComponents(tacManager, idList, &componentList);
+
+		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
 		{
-		TEST_UNIT_START("create a ComponentManager with TestStructA")
-			int error = 0;
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
-
-			std::vector<ECS::EntityID> idList;
-			const size_t entityCount = 6;
-			// allocate the ids 
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			std::vector<TestStructA*> componentList;
-
-			error += newComponents(tacManager, idList, &componentList);
-
-			error += NOT_EQ(idList.size(), componentList.size());
-
-			// deallcote the ids, because the etManager is global¡£
-			errorLogger += destoryEntities(etManager, &idList);
-
-			return error == 0;
-		TEST_UNIT_END;
+			auto id = idList[idIndex];
+			errorLogger += NOT_EQ(tacManager.getComponent(id), componentList[idIndex]);
 		}
 
-		// get component from ComponentManager 
-		{
-		TEST_UNIT_START("get component from ComponentManager")
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
+		errorLogger += destoryEntities(etManager, &idList);
 
-			std::vector<ECS::EntityID> idList;
-			const size_t entityCount = 6;
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			std::vector<TestStructA*> componentList;
-
-
-			errorLogger += newComponents(tacManager, idList, &componentList);
-
-			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-			{
-				auto id = idList[idIndex];
-				errorLogger += NOT_EQ(tacManager.getComponent(id), componentList[idIndex]);
-			}
-
-			errorLogger += destoryEntities(etManager, &idList);
-
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
-		}
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
 		
-		// get component from ComponentManager using the operator []
+	// get component from ComponentManager using the operator []
+	{
+	TEST_UNIT_START("get component from ComponentManager using the operator []")
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+
+		std::vector<ECS::EntityID> idList;
+		const size_t entityCount = 6;
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		std::vector<TestStructA*> componentList;
+
+
+		errorLogger += newComponents(tacManager, idList, &componentList);
+
+		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
 		{
-		TEST_UNIT_START("get component from ComponentManager using the operator []")
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
-
-			std::vector<ECS::EntityID> idList;
-			const size_t entityCount = 6;
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			std::vector<TestStructA*> componentList;
-
-
-			errorLogger += newComponents(tacManager, idList, &componentList);
-
-			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-			{
-				auto id = idList[idIndex];
-				errorLogger += NOT_EQ(tacManager[id], componentList[idIndex]);
-			}
-
-			errorLogger += destoryEntities(etManager, &idList);
-
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+			auto id = idList[idIndex];
+			errorLogger += NOT_EQ(tacManager[id], componentList[idIndex]);
 		}
 
-		// can pass the argument to the component constructor?
-		{
-		TEST_UNIT_START("can pass the argument to the component constructor?")
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
+		errorLogger += destoryEntities(etManager, &idList);
 
-			std::vector<ECS::EntityID> idList;
-			size_t idIndex = 0;
-			const size_t entityCount				= 5;				// avaliable entities
-			const size_t defaultConstructorCount	= 3;				// the component use the default construct
-			const size_t nonDefaultConstructorCount	= entityCount - 3;	// the component use the none default constructor
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			std::vector<TestStructA*> cmpList;
-			int nonDefaultDataA = 3;
-			float nonDefaultDataB = 4.2f;
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
+
+	// can pass the argument to the component constructor?
+	{
+	TEST_UNIT_START("can pass the argument to the component constructor?")
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+
+		std::vector<ECS::EntityID> idList;
+		size_t idIndex = 0;
+		const size_t entityCount				= 5;				// avaliable entities
+		const size_t defaultConstructorCount	= 3;				// the component use the default construct
+		const size_t nonDefaultConstructorCount	= entityCount - 3;	// the component use the none default constructor
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		std::vector<TestStructA*> cmpList;
+		int nonDefaultDataA = 3;
+		float nonDefaultDataB = 4.2f;
 			
-			// generate the components
-			for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
-			{
-				cmpList.push_back(tacManager.newComponnet(idList[idIndex++]));
-			}
-			for (size_t nonDefaultIndex = 0; nonDefaultIndex < nonDefaultConstructorCount; ++nonDefaultIndex)
-			{
-				cmpList.push_back(tacManager.newComponnet(idList[idIndex++], nonDefaultDataA, nonDefaultDataB));
-			}
+		// generate the components
+		for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
+		{
+			cmpList.push_back(tacManager.newComponnet(idList[idIndex++]));
+		}
+		for (size_t nonDefaultIndex = 0; nonDefaultIndex < nonDefaultConstructorCount; ++nonDefaultIndex)
+		{
+			cmpList.push_back(tacManager.newComponnet(idList[idIndex++], nonDefaultDataA, nonDefaultDataB));
+		}
 
-			// check components
-			size_t cmpIndex = 0;
-			// default constructor
-			for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
-			{
-				errorLogger += NOT_EQ(TestStructA::initDataA, cmpList[cmpIndex]->dataA);
-				errorLogger += NOT_EQ(TestStructA::initDataB, cmpList[cmpIndex]->dataB);
-				++cmpIndex;
-			}
-			// none default constructor
-			for (size_t nonDefaultIndex = 0; nonDefaultIndex < nonDefaultConstructorCount; ++nonDefaultIndex)
-			{
-				errorLogger += NOT_EQ(nonDefaultDataA, cmpList[cmpIndex]->dataA);
-				errorLogger += NOT_EQ(nonDefaultDataB, cmpList[cmpIndex]->dataB);
-				++cmpIndex;
-			}
+		// check components
+		size_t cmpIndex = 0;
+		// default constructor
+		for (size_t defaultIndex = 0; defaultIndex < defaultConstructorCount; ++defaultIndex)
+		{
+			errorLogger += NOT_EQ(TestStructA::initDataA, cmpList[cmpIndex]->dataA);
+			errorLogger += NOT_EQ(TestStructA::initDataB, cmpList[cmpIndex]->dataB);
+			++cmpIndex;
+		}
+		// none default constructor
+		for (size_t nonDefaultIndex = 0; nonDefaultIndex < nonDefaultConstructorCount; ++nonDefaultIndex)
+		{
+			errorLogger += NOT_EQ(nonDefaultDataA, cmpList[cmpIndex]->dataA);
+			errorLogger += NOT_EQ(nonDefaultDataB, cmpList[cmpIndex]->dataB);
+			++cmpIndex;
+		}
 			
-			errorLogger += destoryEntities(etManager, &idList);
+		errorLogger += destoryEntities(etManager, &idList);
 
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
-		}
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
 
-		// can the entityID be set into the component?
+	// can the entityID be set into the component?
+	{
+	TEST_UNIT_START("can the entityID be set into the componet?")
+
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+		RandomTool::RandomSet<size_t> randomIndices;
+		std::vector<TestStructA*> cmpList;
+		std::vector<ECS::EntityID> idList;
+
+		const size_t entityCount = 100;				// avaliable entities
+		// allocate the ids
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		// allocate the components
+		errorLogger += newComponents(tacManager, idList, &cmpList);
+
+		// for each id check that the id is same as the component
+		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
 		{
-		TEST_UNIT_START("can the entityID be set into the componet?")
-
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
-			RandomTool::RandomSet<size_t> randomIndices;
-			std::vector<TestStructA*> cmpList;
-			std::vector<ECS::EntityID> idList;
-
-			const size_t entityCount = 100;				// avaliable entities
-			// allocate the ids
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			// allocate the components
-			errorLogger += newComponents(tacManager, idList, &cmpList);
-
-			// for each id check that the id is same as the component
-			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-			{
-				errorLogger +=
-					NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
-			}
-			// free all the id.
-			errorLogger += destoryEntities(etManager, &idList);
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+			errorLogger +=
+				NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
 		}
+		// free all the id.
+		errorLogger += destoryEntities(etManager, &idList);
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
 
-		// ensure that when we remove the entityID from the componentManager, the deconstructor is called
+	// ensure that when we remove the entityID from the componentManager, the deconstructor is called
+	{
+	TEST_UNIT_START("ensure that when we remove the entityID from the componentManager, the deconstructor is called")
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+		int beforeDeconstructCount = TestStructA::deconstructCount;
+		RandomTool::RandomSet<size_t> randomIndices;
+		std::vector<TestStructA*> cmpList;
+		std::vector<ECS::EntityID> idList;
+
+		const size_t entityCount = 100;				// available entities
+		// allocate the ids
+		errorLogger += newEntitis(etManager, &idList, entityCount);
+		// allocate the components
+		errorLogger += newComponents(tacManager, idList, &cmpList);
+
+		// for each id check that the id is same as the component
+		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
 		{
-		TEST_UNIT_START("ensure that when we remove the entityID from the componentManager, the deconstructor is called")
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
-			int beforeDeconstructCount = TestStructA::deconstructCount;
-			RandomTool::RandomSet<size_t> randomIndices;
-			std::vector<TestStructA*> cmpList;
-			std::vector<ECS::EntityID> idList;
-
-			const size_t entityCount = 100;				// available entities
-			// allocate the ids
-			errorLogger += newEntitis(etManager, &idList, entityCount);
-			// allocate the components
-			errorLogger += newComponents(tacManager, idList, &cmpList);
-
-			// for each id check that the id is same as the component
-			for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-			{
-				errorLogger += 
-					NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
-			}
-
-			// free all the components
-			for (auto id : idList)
-			{
-				errorLogger += NOT_EQ(true, tacManager.removeComponent(id));
-			}
-
-			// check the deallocate count
-			int aftherDeconstructCount = TestStructA::deconstructCount;
 			errorLogger += 
-				NOT_EQ(entityCount, aftherDeconstructCount - beforeDeconstructCount);
-
-			// free all the id.
-			errorLogger += destoryEntities(etManager, &idList);
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+				NOT_EQ(idList[idIndex], cmpList[idIndex]->getHostID());
 		}
 
-		// random test on componentManager
+		// free all the components
+		for (auto id : idList)
 		{
-		TEST_UNIT_START("random test on componentManager")
-			DeclareEntityManager(etManager);
-			DeclareComponentManager(tacManager, TestStructA);
-
-			errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+			errorLogger += NOT_EQ(true, tacManager.removeComponent(id));
 		}
 
-		// traverser components with Entity Manager
-		{
-			TEST_UNIT_START("traverser components with Entity Manager")
-				DeclareComponentManager(intCManager,	IntComponent);
-				DeclareComponentManager(floatCManager,	FloatComponent);
-				DeclareComponentManager(charCManager,	CharComponent);
-				DeclareEntityManager(eManager);
+		// check the deallocate count
+		int aftherDeconstructCount = TestStructA::deconstructCount;
+		errorLogger += 
+			NOT_EQ(entityCount, aftherDeconstructCount - beforeDeconstructCount);
+
+		// free all the id.
+		errorLogger += destoryEntities(etManager, &idList);
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
+
+	// random test on componentManager
+	{
+	TEST_UNIT_START("random test on componentManager")
+		DeclareEntityManager(etManager);
+		DeclareComponentManager(tacManager, TestStructA);
+
+		errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
+	}
+
+	// traverser components with Entity Manager
+	{
+		TEST_UNIT_START("traverser components with Entity Manager")
+			DeclareComponentManager(intCManager,	IntComponent);
+			DeclareComponentManager(floatCManager,	FloatComponent);
+			DeclareComponentManager(charCManager,	CharComponent);
+			DeclareEntityManager(eManager);
 				
-				std::vector<ECS::EntityID> totalIDList;
-				std::vector < std::vector<ECS::EntityID>> idListArray;
-				using CN = ComponentNumber;
-				// help function to get the entity count who have the components.
-				// for instance, pass in CN::IntC, it will return the count that entity coutn
-				// that have the IntComponent.
-				auto getEntityNumberOfComponents = [&](CN type) ->size_t
-				{
-					static size_t singleInt				= idListArray[CN::IntC].size();
-					static size_t singleFloat			= idListArray[CN::FloatC].size();
-					static size_t singleChar			= idListArray[CN::CharC].size();
-					static size_t combInt_Float			= idListArray[CN::Int_FloatC].size();
-					static size_t combInt_Char			= idListArray[CN::Int_CharC].size();
-					static size_t combFloat_Char		= idListArray[CN::Float_CharC].size();
-					static size_t combInt_Float_Char	= idListArray[CN::Int_Float_CharC].size();
+			std::vector<ECS::EntityID> totalIDList;
+			std::vector < std::vector<ECS::EntityID>> idListArray;
+			using CN = ComponentNumber;
+			// help function to get the entity count who have the components.
+			// for instance, pass in CN::IntC, it will return the count that entity coutn
+			// that have the IntComponent.
+			auto getEntityNumberOfComponents = [&](CN type) ->size_t
+			{
+				static size_t singleInt				= idListArray[CN::IntC].size();
+				static size_t singleFloat			= idListArray[CN::FloatC].size();
+				static size_t singleChar			= idListArray[CN::CharC].size();
+				static size_t combInt_Float			= idListArray[CN::Int_FloatC].size();
+				static size_t combInt_Char			= idListArray[CN::Int_CharC].size();
+				static size_t combFloat_Char		= idListArray[CN::Float_CharC].size();
+				static size_t combInt_Float_Char	= idListArray[CN::Int_Float_CharC].size();
 
-					switch (type)
-					{
-					case CN::IntC:
-						return singleInt + combInt_Char + combInt_Float + combInt_Float_Char;
-						break;
+				switch (type)
+				{
+				case CN::IntC:
+					return singleInt + combInt_Char + combInt_Float + combInt_Float_Char;
+					break;
 						
-					case CN::FloatC:
-						return singleFloat + combInt_Float + combFloat_Char + combInt_Float_Char;
-						break;
+				case CN::FloatC:
+					return singleFloat + combInt_Float + combFloat_Char + combInt_Float_Char;
+					break;
 
-					case CN::CharC:
-						return singleChar + combInt_Char + combFloat_Char + combInt_Float_Char;
-						break;
+				case CN::CharC:
+					return singleChar + combInt_Char + combFloat_Char + combInt_Float_Char;
+					break;
 
-					case CN::Int_FloatC:
-						return combInt_Float + combInt_Float_Char;
-						break;
+				case CN::Int_FloatC:
+					return combInt_Float + combInt_Float_Char;
+					break;
 
-					case CN::Int_CharC:
-						return combInt_Char + combInt_Float_Char;
-						break;
+				case CN::Int_CharC:
+					return combInt_Char + combInt_Float_Char;
+					break;
 
-					case CN::Float_CharC:
-						return combFloat_Char + combInt_Float_Char;
-						break;
+				case CN::Float_CharC:
+					return combFloat_Char + combInt_Float_Char;
+					break;
 
-					case CN::Int_Float_CharC:
-						return combInt_Float_Char;
-						break;
+				case CN::Int_Float_CharC:
+					return combInt_Float_Char;
+					break;
 
-					default:
-						ASSERT(false && "error componet type");
-						return 0;
-						break;
-					}
-				};
-				errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray, 8, 64, 128, 1, 2);
+				default:
+					ASSERT(false && "error componet type");
+					return 0;
+					break;
+				}
+			};
+			errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray, 8, 64, 128, 1, 2);
 				
-				IntComponent sourceIntComponet(1);
-				FloatComponent sourceFloatComponet(2.2f);
-				CharComponent sourceCharComponet('a');
-				// add components
-				{
-					// mask with IntComponet
-					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-						idListArray[ComponentNumber::IntC], sourceIntComponet);
-					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-						idListArray[ComponentNumber::Int_FloatC], sourceIntComponet);
-					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-						idListArray[ComponentNumber::Int_CharC], sourceIntComponet);
-					errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
-						idListArray[ComponentNumber::Int_Float_CharC], sourceIntComponet);
+			IntComponent sourceIntComponet(1);
+			FloatComponent sourceFloatComponet(2.2f);
+			CharComponent sourceCharComponet('a');
+			// add components
+			{
+				// mask with IntComponet
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::IntC], sourceIntComponet);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_FloatC], sourceIntComponet);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_CharC], sourceIntComponet);
+				errorLogger += addComponentAndMask<IntComponent>(eManager, intCManager,
+					idListArray[ComponentNumber::Int_Float_CharC], sourceIntComponet);
 
-					// mask with FloatComponent
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
-						idListArray[ComponentNumber::FloatC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
-						idListArray[ComponentNumber::Int_FloatC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
-						idListArray[ComponentNumber::Float_CharC], sourceFloatComponet);
-					errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
-						idListArray[ComponentNumber::Int_Float_CharC], sourceFloatComponet);
+				// mask with FloatComponent
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
+					idListArray[ComponentNumber::FloatC], sourceFloatComponet);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
+					idListArray[ComponentNumber::Int_FloatC], sourceFloatComponet);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
+					idListArray[ComponentNumber::Float_CharC], sourceFloatComponet);
+				errorLogger += addComponentAndMask<FloatComponent>(eManager, floatCManager,
+					idListArray[ComponentNumber::Int_Float_CharC], sourceFloatComponet);
 
-					// mask with CharComponent
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
-						idListArray[ComponentNumber::CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
-						idListArray[ComponentNumber::Int_CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
-						idListArray[ComponentNumber::Float_CharC], sourceCharComponet);
-					errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
-						idListArray[ComponentNumber::Int_Float_CharC], sourceCharComponet);
-				}
+				// mask with CharComponent
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
+					idListArray[ComponentNumber::CharC], sourceCharComponet);
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
+					idListArray[ComponentNumber::Int_CharC], sourceCharComponet);
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
+					idListArray[ComponentNumber::Float_CharC], sourceCharComponet);
+				errorLogger += addComponentAndMask<CharComponent>(eManager, charCManager,
+					idListArray[ComponentNumber::Int_Float_CharC], sourceCharComponet);
+			}
 
-				// use EntityManager.RangeEntities() method to iterate all the entities
-				// that have the component .
-				{
-					IntComponent invalidIntComponent(2);
-					FloatComponent invalidFloatComponent(3.3f);
-					CharComponent invalidCharComponent('b');
+			// use EntityManager.RangeEntities() method to iterate all the entities
+			// that have the component .
+			{
+				IntComponent invalidIntComponent(2);
+				FloatComponent invalidFloatComponent(3.3f);
+				CharComponent invalidCharComponent('b');
 
-					CheckComponentsResult result;
+				CheckComponentsResult result;
 
-					// single component traverser. 
-					result = CheckComponentDataEqual(
-						intCManager, eManager->RangeEntities<IntComponent>(), sourceIntComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::IntC));
-					result = CheckComponentDataEqual(
-						floatCManager, eManager->RangeEntities<FloatComponent>(), sourceFloatComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::FloatC));
-					result = CheckComponentDataEqual(
-						charCManager, eManager->RangeEntities<CharComponent>(), sourceCharComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::CharC));
-					// multiple component traverser.
-					// int - float
-					result = CheckComponentDataEqual(
-						intCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceIntComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
-					result = CheckComponentDataEqual(
-						floatCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceFloatComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
-					// int - char
-					result = CheckComponentDataEqual(
-						intCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceIntComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
-					result = CheckComponentDataEqual(
-						charCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceCharComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
-					// float - char
-					result = CheckComponentDataEqual(
-						floatCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceFloatComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
-					result = CheckComponentDataEqual(
-						charCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceCharComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
-					// int - float - char
-					result = CheckComponentDataEqual(
-						intCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceIntComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
-					result = CheckComponentDataEqual(
-						floatCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceFloatComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
-					result = CheckComponentDataEqual(
-						charCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceCharComponet);
-					errorLogger += result.error;
-					errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
-					
-
+				// single component traverser. 
+				result = CheckComponentDataEqual(
+					intCManager, eManager->RangeEntities<IntComponent>(), sourceIntComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::IntC));
+				result = CheckComponentDataEqual(
+					floatCManager, eManager->RangeEntities<FloatComponent>(), sourceFloatComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::FloatC));
+				result = CheckComponentDataEqual(
+					charCManager, eManager->RangeEntities<CharComponent>(), sourceCharComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::CharC));
+				// multiple component traverser.
+				// int - float
+				result = CheckComponentDataEqual(
+					intCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceIntComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
+				result = CheckComponentDataEqual(
+					floatCManager, eManager->RangeEntities<IntComponent, FloatComponent>(), sourceFloatComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_FloatC));
+				// int - char
+				result = CheckComponentDataEqual(
+					intCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceIntComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
+				result = CheckComponentDataEqual(
+					charCManager, eManager->RangeEntities<IntComponent, CharComponent>(), sourceCharComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_CharC));
+				// float - char
+				result = CheckComponentDataEqual(
+					floatCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceFloatComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
+				result = CheckComponentDataEqual(
+					charCManager, eManager->RangeEntities<FloatComponent, CharComponent>(), sourceCharComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Float_CharC));
+				// int - float - char
+				result = CheckComponentDataEqual(
+					intCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceIntComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
+				result = CheckComponentDataEqual(
+					floatCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceFloatComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
+				result = CheckComponentDataEqual(
+					charCManager, eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>(), sourceCharComponet);
+				errorLogger += result.error;
+				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
 
 
-					result = CheckComponentDataEqual<IntComponent, ECS::EntityRange<IntComponent>>(
-						intCManager, eManager->RangeEntities<IntComponent>(), invalidIntComponent);
-					errorLogger.LogIfNotEq(result.count, result.error);
-					result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
-						floatCManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
-					errorLogger.LogIfNotEq(result.count, result.error);
-					result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
-						charCManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
-					errorLogger.LogIfNotEq(result.count, result.error);
-				}
+				result = CheckComponentDataEqual<IntComponent, ECS::EntityRange<IntComponent>>(
+					intCManager, eManager->RangeEntities<IntComponent>(), invalidIntComponent);
+				errorLogger.LogIfNotEq(result.count, result.error);
+				result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
+					floatCManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
+				errorLogger.LogIfNotEq(result.count, result.error);
+				result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
+					charCManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
+				errorLogger.LogIfNotEq(result.count, result.error);
+			}
 
-				errorLogger += destoryEntities(eManager, &totalIDList);
-				return errorLogger.conclusion();
-		TEST_UNIT_END;
+			errorLogger += destoryEntities(eManager, &totalIDList);
+			return errorLogger.conclusion();
+	TEST_UNIT_END;
 
-		}
 	}
 }
+
+}// namespace TestUnit
 
 
 int main()
