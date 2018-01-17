@@ -6,6 +6,11 @@
 namespace ECS
 {
 
+struct DefaultEntityManagerTraits {
+	static const size_t MaxEntityCount = 2048;
+};
+
+
 // the job of EntityManager is to generator the EntityID
 // EntityID is just a number,
 // inside the EntityManager, for each EntityID,
@@ -15,7 +20,7 @@ namespace ECS
 // you can access the component through ComponentManager with the EntityID.
 // Traits:
 //		const MaxEntityCount;
-template<typename Traits>
+template<typename Traits = DefaultEntityManagerTraits>
 class EntityManager
 {
 public:
@@ -70,7 +75,7 @@ inline MaskResult EntityManager<Traits>::maskSingleComponentType(EntityID entity
 	// if in the debug mode.
 	// use a static var to store the componentTypeID.
 	static const ComponentTypeID idForTheComponentType =
-		ComponentIDGenerator::getID<COMPONENT_TYPE>();
+		ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
 	// the id must greater than 0;
 	ASSERT(idForTheComponentType > 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
 
@@ -115,7 +120,7 @@ inline MaskResult EntityManager<Traits>::maskComponentType(EntityID entityID)
 			// get its id and check if it > 0,
 			// if not, it means the type haven't been registered until now.
 			// Please ensure you call ComponentIDGenerator::newID<COMPONENT_TYPES>() before this function is called.
-			ASSERT(ComponentIDGenerator::getID<COMPONENT_TYPES>() != 0 
+			ASSERT(ComponentIDGenerator::IDOf<COMPONENT_TYPES>() != 0 
 				&& "no ID found with the ComponentType")
 			,
 
