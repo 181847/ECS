@@ -4,7 +4,7 @@
 * ECSWorld：管理以上两种类型的Manager，统一规范（**尚未完全实现**）
 
 #### EntityManager
-<div style="background: #eeeeee">
+<div style="background: #999999">
 
 ##### 模板Traits
 
@@ -14,7 +14,7 @@
 ---------|--------|-------
 const size_t | MaxEntityCount | EntityManager可以分配的最大Entity数量
 
-<div style="background: #cccccc">
+<div style="background: #aaaaaa">
 
 ##### 函数：
 * EntityID	newEntity()  
@@ -37,8 +37,6 @@ const size_t | MaxEntityCount | EntityManager可以分配的最大Entity数量
   * 返回已经使用的EntityID的数量
 
 <div/>
-
-<div/>
-
 <div/>
 <!--EntityManager-->
+
