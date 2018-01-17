@@ -129,6 +129,7 @@
     <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Detail.md" />
     <None Include="ReadMe.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
