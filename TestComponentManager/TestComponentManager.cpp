@@ -17,7 +17,7 @@ const int gComponentMaxSize = 1024;
 	ECS::ComponentManager<ComponentType> managerName(MaxSize)
 
 #define DeclareEntityManager(managerName)\
-	ECS::EntityManager* managerName = ECS::EntityManager::getInstance()
+	ECS::EntityManager<TestEnityTrait>* managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
 
 struct TestStructA
 	:public ECS::BaseComponent
@@ -71,7 +71,7 @@ int newComponents(
 // it will allocate all the entityID 
 template<typename COMPONENT_TYPE>
 int randomTestCompnets(
-	ECS::EntityManager* eManager,
+	ECS::EntityManager<TestEnityTrait>* eManager,
 	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
 	size_t entityCount,
 	size_t loopTime = 20, 
@@ -158,7 +158,7 @@ int randomTestCompnets(
 // return how many errors happened.
 template<typename COMPONENT_TYPE, typename...CONSTRUCT_ARGS>
 int addComponentAndMask(
-	ECS::EntityManager* eManager,
+	ECS::EntityManager<TestEnityTrait>* eManager,
 	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
 	ECS::EntityID id,
 	CONSTRUCT_ARGS&& ...args
@@ -184,7 +184,7 @@ int addComponentAndMask(
 
 template<typename COMPONENT_TYPE, typename...CONSTRUCT_ARGS>
 int addComponentAndMask(
-	ECS::EntityManager* eManager,
+	ECS::EntityManager<TestEnityTrait>* eManager,
 	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
 	std::vector<ECS::EntityID>& idList,
 	CONSTRUCT_ARGS&& ...args)
@@ -245,9 +245,9 @@ namespace TestUnit
 {
 	void GetReady()
 	{
-		ECS::ComponentIDGenerator::newID<IntComponent>();
+		/*ECS::ComponentIDGenerator::newID<IntComponent>();
 		ECS::ComponentIDGenerator::newID<FloatComponent>();
-		ECS::ComponentIDGenerator::newID<CharComponent>();
+		ECS::ComponentIDGenerator::newID<CharComponent>();*/
 	}
 
 
