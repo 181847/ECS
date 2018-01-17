@@ -395,6 +395,9 @@ EntityManager<Traits>::EntityManager()
 	_freeList->start = 1;
 	_freeList->end = Traits::MaxEntityCount;
 	_freeList->next = nullptr;
+
+	// Check the MaxEntityCount is greater than 0.
+	assert(_freeList->end > 0);
 }
 
 template<typename Traits>
