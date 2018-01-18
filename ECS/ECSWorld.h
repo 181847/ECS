@@ -1,7 +1,10 @@
 #pragma once
 #include "ECS.h"
+#include "EntityManager.h"
 #include "ComponentManager.h"
-
+#include <functional>
+#include <type_traits>
+#include <MyTools\TypeTool.h>
 
 namespace ECS
 {
@@ -9,11 +12,84 @@ namespace ECS
 // The ECSWorld is used to store all the ComponentManager,
 // and provide a function to get them,
 // all the ComponentManager is using the template feature.
-template<typename EntityManagerTraits, typename ...ComponentManagerTraitsList>
+template<typename EntityManagerTraits, typename ...ComponentType>
 class ECSWorld
 {
 public:
+	// Create a new Entity, return its id.
+	EntityID NewEntity();
 
+	// Iterate all the entity that have all the component type in the template paramenters,
+	// for each entity, get the id and the component it associated with, 
+	// pass them to the std::function.
+	template<typename ...COMPONENT_TYPE_LIST>
+	void Foreach(std::function<void(EntityID, COMPONENT_TYPE_LIST*...)> theJob);
+
+	// For only One entity, try to get its components whose type is listed in the template parameters,
+	// if any type lacked, return false,
+	// else pass the listed components to the std::function.
+	template<typename ...COMPONENT_TYPE_LIST>
+	bool ForOne(EntityID id, std::function<void(COMPONENT_TYPE_LIST*...)> theJob);
+
+	// Add a component to the entity, return success or not.
+	template<typename ...COMPONENT_CONSTRUCT_ARGS>
+	bool AttachTo(EntityID targetID, COMPONENT_CONSTRUCT_ARGS&&...args);
+
+	// Detach a component from the entity, return success or not.
+	template<typename ...COMPONENT_TYPE_LIST>
+	bool DetachFrom(EntityID targetID);
+
+	// Check one entity, dose it have all the components?
+	template<typename ...COMPONENT_TYPE_LIST>
+	bool DoHave(EntityID targetID);
+
+private:
+	template<typename COMPONENT_TYPE>
+	static ECS::ComponentManager<COMPONENT_TYPE>* getComponentManager();
+
+	template<typename COMPONENT_TYPE>
+	static COMPONENT_TYPE* getComponent(ECS::EntityID id);
+
+	static ECS::EntityManager<EntityManagerTraits>* s_pEntityManager;
 };
+
+// Initialize static member.
+template<typename EntityManagerTraits, typename ...ComponentType>
+ECS::EntityManager<EntityManagerTraits>* s_pEntityManager = ECS::EntityManager<EntityManagerTraits>::getInstance();
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename ...COMPONENT_TYPE_LIST>
+inline void ECSWorld<EntityManagerTraits, ComponentType...>::Foreach(std::function<void(EntityID id, COMPONENT_TYPE_LIST*...args)> theJob)
+{
+	static_assert(TypeTool::IsAllOf<TypeTool::TypeContainer<COMPONENT_TYPE_LIST...>, ComponentType...>::value,
+		"Exist not supported component type");
+
+	for (EntityID  id : s_pEntityManager->RangeEntities<COMPONENT_TYPE_LIST...>())
+	{
+		theJob(id, getComponent<COMPONENT_TYPE_LIST>(id)...);
+	}
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename COMPONENT_TYPE>
+inline ECS::ComponentManager<COMPONENT_TYPE>* ECSWorld<EntityManagerTraits, ComponentType...>::getComponentManager()
+{
+	static ComponentManager<COMPONENT_TYPE> s_componentManager(ECS::DefaultComponentManagerTraits::MaxSize);
+	return &s_componentManager;
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename COMPONENT_TYPE>
+inline COMPONENT_TYPE * ECSWorld<EntityManagerTraits, ComponentType...>::getComponent(ECS::EntityID id)
+{
+	static ComponentManager<COMPONENT_TYPE>* s_pAnotherManager = getComponentManager<COMPONENT_TYPE>();
+	return s_pAnotherManager->getComponent(id);
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+inline EntityID ECSWorld<EntityManagerTraits, ComponentType...>::NewEntity()
+{
+	return s_pEntityManager->newEntity();
+}
 
 }// namespace ECS
