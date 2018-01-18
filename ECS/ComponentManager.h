@@ -25,9 +25,7 @@ struct DefaultComponentManagerTraits
 	static const std::size_t MaxSize = 1024;
 };
 
-// Traits:
-//		static size_t MaxSize; // the max component count.
-template<typename COMPONENT_TYPE, typename Traits = DefaultComponentManagerTraits>
+template<typename COMPONENT_TYPE>
 class ComponentManager
 	:public BaseComponentSecretDesigner 
 	// With this supuer class, the ComponentManager can change the Component's EntityID,
@@ -37,11 +35,11 @@ class ComponentManager
 	static_assert(std::is_base_of<BaseComponent, COMPONENT_TYPE>::value, "The COMPONENT_TYPE must be derived from BaseComponent.");
 
 public:
-	ComponentManager();
+	ComponentManager(const size_t maxSize);
 	~ComponentManager();
 
-	ComponentManager(const typename ComponentManager<COMPONENT_TYPE, Traits>&) = delete;
-	ComponentManager<COMPONENT_TYPE, Traits>& operator =(const typename ComponentManager<COMPONENT_TYPE, Traits>& ) = delete;
+	ComponentManager(const typename ComponentManager<COMPONENT_TYPE>&) = delete;
+	ComponentManager<COMPONENT_TYPE>& operator =(const typename ComponentManager<COMPONENT_TYPE>& ) = delete;
 
 	// generate  a new component with the entityID,
 	// pass all the rest argument to the component's constructor.
@@ -63,26 +61,28 @@ private:
 	std::size_t						m_usedComponentCount;
 	static const ComponentTypeID	m_typeID;
 	std::unordered_map<EntityID, COMPONENT_TYPE*> m_lookUpTable;
+	const std::size_t				m_maxSize;
 };
 
 // static member initialize.
-template<typename COMPONENT_TYPE, typename Traits>
-const ComponentTypeID ComponentManager<COMPONENT_TYPE, Traits>::m_typeID = ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
+template<typename COMPONENT_TYPE>
+const ComponentTypeID ComponentManager<COMPONENT_TYPE>::m_typeID = ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline ComponentManager<COMPONENT_TYPE, Traits>::ComponentManager()
+template<typename COMPONENT_TYPE>
+inline ComponentManager<COMPONENT_TYPE>::ComponentManager(const size_t maxSize)
+	:m_maxSize(maxSize)
 {
 	static_assert(std::is_base_of<BaseComponent, COMPONENT_TYPE>::value, "The COMPONENT_TYPE must be derived from BaseComponent.");
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline ComponentManager<COMPONENT_TYPE, Traits>::~ComponentManager()
+template<typename COMPONENT_TYPE>
+inline ComponentManager<COMPONENT_TYPE>::~ComponentManager()
 {
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
+template<typename COMPONENT_TYPE>
 inline COMPONENT_TYPE * 
-ComponentManager<COMPONENT_TYPE, Traits>::getComponent
+ComponentManager<COMPONENT_TYPE>::getComponent
 (EntityID entityID)
 {
 	auto iterCmp = m_lookUpTable.find(entityID);
@@ -96,14 +96,14 @@ ComponentManager<COMPONENT_TYPE, Traits>::getComponent
 	}
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE, Traits>::operator[](EntityID entityID)
+template<typename COMPONENT_TYPE>
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::operator[](EntityID entityID)
 {
 	return this->getComponent(entityID);
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline bool ComponentManager<COMPONENT_TYPE, Traits>::removeComponent(EntityID removedID)
+template<typename COMPONENT_TYPE>
+inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID)
 {
 	auto iterCmp = m_lookUpTable.find(removedID);
 	if (iterCmp == m_lookUpTable.end())
@@ -121,29 +121,29 @@ inline bool ComponentManager<COMPONENT_TYPE, Traits>::removeComponent(EntityID r
 	}
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getMaxSize() const
+template<typename COMPONENT_TYPE>
+inline size_t ComponentManager<COMPONENT_TYPE>::getMaxSize() const
 {
-	return Traits::MaxSize;
+	return m_maxSize;
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
-inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getUsedCount() const
+template<typename COMPONENT_TYPE>
+inline size_t ComponentManager<COMPONENT_TYPE>::getUsedCount() const
 {
 	return m_usedComponentCount;
 }
 
-template<typename COMPONENT_TYPE, typename Traits>
+template<typename COMPONENT_TYPE>
 template<typename ...CONSTRUCT_ARGS>
 inline COMPONENT_TYPE * 
-ComponentManager<COMPONENT_TYPE, Traits>::
+ComponentManager<COMPONENT_TYPE>::
 newComponnet
 (EntityID entityID, CONSTRUCT_ARGS&&...args)
 {
 	// Prevent from creating the component with the same entityID.
 	assert(nullptr == this->getComponent(entityID));
 	// Overflow ?
-	assert(m_usedComponentCount < Traits::MaxSize);
+	assert(m_usedComponentCount < m_maxSize);
 
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
 	setComponentEntityID(pNewComp, entityID);
