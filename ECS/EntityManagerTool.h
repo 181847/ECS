@@ -7,6 +7,7 @@ namespace ECS
 
 using MaskResult = unsigned char;
 
+// Mask result flags, the situation can be combined.
 enum MaskResultFlag
 	: unsigned char
 { 
@@ -18,13 +19,12 @@ enum MaskResultFlag
 
 // the EntityFreeBlock is used to store the free entity ID,
 // all the avaliable id are stored between the EntityFreBlock.start~end.
-// which entityID can be used .
 typedef struct EntityFreeBlock
 {
 public:
-	EntityID start;
-	EntityID end;
-	EntityFreeBlock* next;
+	EntityID			start;
+	EntityID			end;
+	EntityFreeBlock*	next;
 }EntityFreeBlock, *PEntityFreeBlock;
 
 
@@ -106,8 +106,8 @@ inline EntityIter<COMPONENT_TYPES...>::EntityIter(
 	_internalTail(internalTail),
 	_currID(startID)
 {
-
 }
+
 template<typename ...COMPONENT_TYPES>
 inline EntityID EntityIter<COMPONENT_TYPES...>::operator*()
 {
@@ -126,8 +126,11 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 	while (true)
 	{
 		// _currID has been accessed,
-		// so the first thing is add one to it.
-		for (++_currID; _currID <= internalEnd; ++_currID)
+		// so the first thing is add one to it.;
+		++_currID;
+
+		// loop the _currID to internalEnd until we find a id that have the desiredMask.
+		for (; _currID <= internalEnd; ++_currID)
 		{
 			if ((_maskPool[_currID] & _desiredMask) == _desiredMask)
 			{
@@ -136,22 +139,28 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 			}
 		}
 
+		// have we find a avaliable id, or have we walked through the whole _maskPool
 		if (findAnotherOne || _internalTail == nullptr)
 		{
 			break;
 		}
 		else
 		{
+			// Found no avaliable id, move the internal to the next.
 			_internalHead = _internalTail;
 			_internalTail = _internalTail->next;
-		}
 
-		// update the internalStart and ...End
-		internalStart	= getInternalStart();
-		internalEnd		= getInternalEnd();
-		_currID = internalStart;
+			// update the internalStart and internalEnd,
+			// continue while loop.
+			internalStart	= getInternalStart();
+			internalEnd		= getInternalEnd();
+			_currID = internalStart;
+		}
 	}
 
+	// if the _currID greater than the _maxEntityCount,
+	// it means no avaliable id was found this time, 
+	// return 0, and the 'range for loop' should be stopped when it return 0.
 	_currID = _currID > _maxEntityCount ? 0 : _currID;
 	
 	return *this;
