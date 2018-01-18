@@ -8,6 +8,7 @@
 #include <iostream>
 #include <TestEntityManager\TestComponentTypes.h>
 #include <TestEntityManager\TestEntityManagerTool.h>
+#include <vector>
 
 DECLARE_TEST_UNITS;
 
@@ -17,56 +18,39 @@ DECLARE_TEST_UNITS;
 const size_t g_MaxIntComponent		= 1024;
 const size_t g_MaxFloatComponent	= 512;
 const size_t g_MaxCharComponent		= 2048;
+
 namespace TestUnit
 {
 
+void GetReady()
+{
+}
 
+void AfterTest()
+{
+}
 
-	void GetReady()
-	{
-		ECS::ECSWorld::newComponentManager<IntComponent>(g_MaxIntComponent);
-		ECS::ECSWorld::newComponentManager<FloatComponent>(g_MaxFloatComponent);
-		ECS::ECSWorld::newComponentManager<CharComponent>(g_MaxCharComponent);
-	}
-
-	void AfterTest()
-	{
-
-	}
-
-	void AddTestUnit()
-	{
+void AddTestUnit()
+{
 
 #pragma region check testModules work
-		TEST_UNIT_START("check testModules work")
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+	TEST_UNIT_START("check testModules work")
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
 #pragma endregion
 
-#pragma region get the component Manager exist, and get none exist manager
-		TEST_UNIT_START("get the component Manager exist, and get none exist manager")
-			auto * pIntComponentManager		= ECS::ECSWorld::getComponentManager<IntComponent>();
-			auto * pFloatComponentManager	= ECS::ECSWorld::getComponentManager<FloatComponent>();
-			auto * pCharComponentManager	= ECS::ECSWorld::getComponentManager<CharComponent>();
+#pragma region declare ecs world
+	TEST_UNIT_START("declare ecs world")
+		ECS::ECSWorld<ECS::DefaultEntityManagerTraits, IntComponent, DoubleComponent, FloatComponent, CharComponent> testECSWorld;
+		
+	testECSWorld.Foreach<IntComponent, CharComponent>(
+		[](ECS::EntityID id, auto*, auto*)->void {});
 
-			auto * pUnexistComponetManager	= ECS::ECSWorld::getComponentManager<DoubleComponent>();
-
-			errorLogger.LogIfEq(nullptr, pIntComponentManager);
-			errorLogger.LogIfEq(nullptr, pFloatComponentManager);
-			errorLogger.LogIfEq(nullptr, pCharComponentManager);
-
-
-			errorLogger.LogIfNotEq(nullptr, pUnexistComponetManager);
-
-			errorLogger.LogIfNotEq(g_MaxIntComponent,	pIntComponentManager	->getMaxSize());
-			errorLogger.LogIfNotEq(g_MaxFloatComponent, pFloatComponentManager	->getMaxSize());
-			errorLogger.LogIfNotEq(g_MaxCharComponent,	pCharComponentManager	->getMaxSize());
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+		return errorLogger.conclusion();
+	TEST_UNIT_END;
 #pragma endregion
 
-
-	}// function void AddTestUnit()
+}// function void AddTestUnit()
 
 
 }// namespace TestUnit
@@ -79,4 +63,3 @@ int main()
 
 	return 0;
 }
-
