@@ -61,9 +61,9 @@ private:
 
 	// add another one for entityID 0,
 	// which means a invalid ID.
-	ComponentMask		_maskPool[1 + Traits::MaxEntityCount];
-	PEntityFreeBlock	_freeList;
-	size_t				_usedID;
+	ComponentMask		m_maskPool[1 + Traits::MaxEntityCount];
+	PEntityFreeBlock	m_freeList;
+	size_t				m_usedID;
 };
 
 template<typename Traits>
@@ -87,7 +87,7 @@ inline MaskResult EntityManager<Traits>::maskSingleComponentType(EntityID entity
 #endif
 
 	// does the entity already have the componentType?
-	if ((_maskPool[entityID] & maskForTheComponentType).any())
+	if ((m_maskPool[entityID] & maskForTheComponentType).any())
 	{
 		return MaskResultFlag::RedundancyComponent;
 	}
@@ -95,7 +95,7 @@ inline MaskResult EntityManager<Traits>::maskSingleComponentType(EntityID entity
 	//TODO: here waste one bit in the lower bitset, it can be improved in the future.
 	// Or here can just make it stand for the invalid component mask
 	// now just left it.
-	_maskPool[entityID] |= maskForTheComponentType;
+	m_maskPool[entityID] |= maskForTheComponentType;
 
 	return MaskResultFlag::Success;
 }
@@ -144,12 +144,12 @@ inline MaskResult EntityManager<Traits>::maskComponentType(EntityID entityID)
 
 	MaskResult result = 0;
 	// does the entity already have some of the componentType?
-	if ((_maskPool[entityID] & combinedMask).any())
+	if ((m_maskPool[entityID] & combinedMask).any())
 	{
 		result |= MaskResultFlag::RedundancyComponent;
 	}
 
-	_maskPool[entityID] |= combinedMask;
+	m_maskPool[entityID] |= combinedMask;
 	result |= MaskResultFlag::Success;
 
 	return result;
@@ -162,7 +162,7 @@ inline bool EntityManager<Traits>::haveComponent(EntityID entityID)
 	ASSERT(isValid(entityID));
 	const ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
 
-	if ((_maskPool[entityID] & combinedMask) == combinedMask)
+	if ((m_maskPool[entityID] & combinedMask) == combinedMask)
 	{
 		return true;
 	}
@@ -176,7 +176,7 @@ template<typename Traits>
 template<typename ...COMPONENT_TYPES>
 inline auto EntityManager<Traits>::RangeEntities()
 {
-	return EntityRange<COMPONENT_TYPES...>(Traits::MaxEntityCount, _maskPool, _freeList);
+	return EntityRange<COMPONENT_TYPES...>(Traits::MaxEntityCount, m_maskPool, m_freeList);
 }
 
 template<typename Traits>
@@ -189,34 +189,31 @@ EntityManager<Traits> * EntityManager<Traits>::getInstance()
 template<typename Traits>
 EntityID EntityManager<Traits>::newEntity()
 {
-	if (_freeList == nullptr)
-	{
-		// no invalid ID.
-		return 0;
-	}
+	assert(m_freeList && "no free id left");
 
 	EntityID retID = 0;
 
 	// if there is only one id left in the first block.
-	if (_freeList->start == _freeList->end)
+	if (m_freeList->start == m_freeList->end)
 	{
-		retID = _freeList->start;
+		retID = m_freeList->start;
 		// delete the first block
 		// move the pointer to the next block.
-		PEntityFreeBlock deleteBlock = _freeList;
-		_freeList = _freeList->next;
+		PEntityFreeBlock deleteBlock = m_freeList;
+		m_freeList = m_freeList->next;
 		delete deleteBlock;
 	}
 	else
 	{
 		// the first block have more than one entity id,
-		// return the start, and substract it by one.
-		retID = _freeList->start++;
+		// return the start, and move it's start by one.
+		retID = m_freeList->start++;
 	}
 
-	++_usedID;
+	++m_usedID;
 	// clear the mask.
-	_maskPool[retID].reset();
+	m_maskPool[retID].reset();
+
 	return retID;
 }
 
@@ -226,7 +223,7 @@ bool EntityManager<Traits>::destoryEntity(EntityID destoriedID)
 	// the entityID shouldn't be zero.
 	ASSERT(destoriedID != 0);
 
-	PEntityFreeBlock prev(nullptr), curr(_freeList);
+	PEntityFreeBlock prev(nullptr), curr(m_freeList);
 	PEntityFreeBlock newBlock = nullptr;
 
 	while (curr)
@@ -285,9 +282,9 @@ bool EntityManager<Traits>::destoryEntity(EntityID destoriedID)
 	case (1 | 4):
 		// prev /\ , curr-|-|, prev\_/ dest\_/ curr
 	case 1:
-		_freeList = new EntityFreeBlock();
-		_freeList->start = _freeList->end = destoriedID;
-		_freeList->next = curr;
+		m_freeList = new EntityFreeBlock();
+		m_freeList->start = m_freeList->end = destoriedID;
+		m_freeList->next = curr;
 		break;
 
 		// prev /\  curr-|-|, prev\_/ dest<-curr
@@ -327,7 +324,7 @@ bool EntityManager<Traits>::destoryEntity(EntityID destoriedID)
 		ASSERT(false && "Unexpected situation");
 	}
 
-	--_usedID;
+	--m_usedID;
 	return true;
 }
 
@@ -339,7 +336,7 @@ bool EntityManager<Traits>::isValid(EntityID checkID)
 	{
 		return false;
 	}
-	PEntityFreeBlock prev(nullptr), curr(_freeList);
+	PEntityFreeBlock prev(nullptr), curr(m_freeList);
 
 	while (curr)
 	{
@@ -389,20 +386,20 @@ size_t EntityManager<Traits>::getSize() const
 template<typename Traits>
 size_t EntityManager<Traits>::getUsedIDCount() const
 {
-	return _usedID;
+	return m_usedID;
 }
 
 template<typename Traits>
 EntityManager<Traits>::EntityManager()
-	: _usedID(0)
+	: m_usedID(0)
 {
-	_freeList = new EntityFreeBlock();
-	_freeList->start = 1;
-	_freeList->end = Traits::MaxEntityCount;
-	_freeList->next = nullptr;
+	m_freeList = new EntityFreeBlock();
+	m_freeList->start = 1;
+	m_freeList->end = Traits::MaxEntityCount;
+	m_freeList->next = nullptr;
 
 	// Check the MaxEntityCount is greater than 0.
-	assert(_freeList->end > 0);
+	assert(m_freeList->end > 0);
 }
 
 template<typename Traits>
