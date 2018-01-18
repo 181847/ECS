@@ -14,7 +14,7 @@
 DECLARE_TEST_UNITS;
 
 #define DeclareComponentManager(managerName, ComponentType)\
-	ECS::ComponentManager<ComponentType> managerName
+	ECS::ComponentManager<ComponentType> managerName(ECS::DefaultComponentManagerTraits::MaxSize)
 
 #define DeclareEntityManager(managerName)\
 	ECS::EntityManager<TestEnityTrait>* managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
