@@ -8,11 +8,14 @@
 
 ##### 模板Traits
 
-此模板应该定义以下常量：
+此模板应该定义以下常量或类型：
 
-常量类型 | 常量名 | 作用
+常量或类型 | 常量名 | 作用
 ---------|--------|-------
 const size_t | MaxEntityCount | EntityManager可以分配的最大Entity数量
+const size_t | MaxComponentTypes | EntityManager可以区分的最大数量的组件类型
+类型声明    | **ComponentMask** | 定义蒙版类型，用来标记Entity所拥有的蒙版，就目前而言，必须使用std::bitset
+类型声明    | **ComponentIDGenerator** | 组件类型ID生成器，用于生成组件**类型**的ID值，必须实现**size_t IDOf\<T\>()**，考虑使用TypeTool::IDGenerator
 
 <div style="background: #aaaaaa">
 
@@ -49,7 +52,7 @@ for (EntityID & id : entityManager->RangeEntities<IntComponent>())
 
 <!--EntityManager-->
 
-
+----
 
 #### CompoentManager\<COMPONENT_TYPE, Traits\>
 <div style="background: #999999">
