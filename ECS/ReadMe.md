@@ -3,7 +3,7 @@
 * ComponentManager：通过EntityID存取组件对象
 * ECSWorld：管理以上两种类型的Manager，统一规范（**尚未完全实现**）
 
-#### EntityManager
+#### EntityManager\<Traits\>
 <div style="background: #999999">
 
 ##### 模板Traits
@@ -31,12 +31,59 @@ const size_t | MaxEntityCount | EntityManager可以分配的最大Entity数量
   * 检查某个EntityID是否包含指定的多个（或者单个）组件的蒙版。
 * template\<...T\> auto RangeEntities();
   * 返回一个用于遍历EntityID的迭代器
+  * 例如
+```c++
+for (EntityID & id : entityManager->RangeEntities<IntComponent>())
+{
+    // Do something with the id.
+    // All the entities have the IntComponent.
+}
+```
 * size_t getSize() const
   * 返回可使用的总的EntityID的数量
 * size_t getUsedIDCount() const
   * 返回已经使用的EntityID的数量
 
-<div/>
-<div/>
+</div>
+</div>
+
 <!--EntityManager-->
+
+
+
+#### CompoentManager\<COMPONENT_TYPE, Traits\>
+<div style="background: #999999">
+
+##### 模板Traits
+
+此模板应该定义以下常量：
+
+常量类型 | 常量名 | 作用
+---------|--------|-------
+const size_t | MaxSize | 可以分配的最大的Component的数量。
+
+<div style="background: #aaaaaa">
+
+##### 函数：
+* template<...CONSTRUCT_ARGS> COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
+  * 为一个EntityID创建一个对应的组件，返回这个组件的指针，一个EntityID只能创建对应的一个组件，当id重复或者已分配组件数量超出Traits::MaxSize，触发断言。
+  * 此方法**不检查EntityID能否可用**
+* COMPONENT_TYPE *	getComponent(EntityID entityID);
+  * 通过EntityID来获取为其分配的组件对象
+  * 当尚**未**分配的时候，返回nullptr
+  * 此方法**不检查EntityID能否可用**
+* COMPONENT_TYPE *	operator [](EntityID entityID)
+  * 重载数组下标运算符，功能与*getComponent*一样
+  * 通过EntityID来获取为其分配的组件对象
+  * 当尚**未**分配的时候，返回nullptr
+  * 此方法**不检查EntityID能否可用**
+* bool removeComponent(EntityID removedID)
+  * 将指定ID的Component对象删除，返回删除是否成功
+  * 此方法**不检查EntityID能否可用**
+* std::size_t getMaxSize()
+  * 返回Traits::MaxSize，ComponentManager能够容纳的最大的组件数量
+* std::size_t getUsedCount()
+  * 已分配的组件数量
+</div>
+</div>
 
