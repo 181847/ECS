@@ -4,6 +4,7 @@
 #include <ECS/ComponentManager.h>
 #include <MyTools/RandomTool.h>
 #include <MyTools/UnitTestModules.h>
+#include <algorithm>
 
 // this struct limit an entity manager's max entity count.
 struct TestEnityTrait {
