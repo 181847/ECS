@@ -54,20 +54,14 @@ for (EntityID & id : entityManager->RangeEntities<IntComponent>())
 
 ----
 
-#### CompoentManager\<COMPONENT_TYPE, Traits\>
+#### CompoentManager\<COMPONENT_TYPE\>
 <div style="background: #999999">
-
-##### 模板Traits
-
-此模板应该定义以下常量：
-
-常量类型 | 常量名 | 作用
----------|--------|-------
-const size_t | MaxSize | 可以分配的最大的Component的数量。
 
 <div style="background: #aaaaaa">
 
 ##### 函数：
+* 构造函数
+  * 构造函数接受一个size_t类型的值，表示最大能够容纳的Component的数量_
 * template<...CONSTRUCT_ARGS> COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
   * 为一个EntityID创建一个对应的组件，返回这个组件的指针，一个EntityID只能创建对应的一个组件，当id重复或者已分配组件数量超出Traits::MaxSize，触发断言。
   * 此方法**不检查EntityID能否可用**
@@ -87,6 +81,7 @@ const size_t | MaxSize | 可以分配的最大的Component的数量。
   * 返回Traits::MaxSize，ComponentManager能够容纳的最大的组件数量
 * std::size_t getUsedCount()
   * 已分配的组件数量
+
 </div>
 </div>
 
