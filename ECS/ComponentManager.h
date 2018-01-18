@@ -20,19 +20,22 @@ protected:
 };
 
 // The default ComponentManager Traits.
-struct ComponentManagerDefaultTraits
+struct DefaultComponentManagerTraits
 {
 	static const std::size_t MaxSize = 1024;
 };
 
 // Traits:
 //		static size_t MaxSize; // the max component count.
-template<typename COMPONENT_TYPE, typename Traits = ComponentManagerDefaultTraits>
+template<typename COMPONENT_TYPE, typename Traits = DefaultComponentManagerTraits>
 class ComponentManager
 	:public BaseComponentSecretDesigner 
 	// With this supuer class, the ComponentManager can change the Component's EntityID,
 	// and hide it's setter from outside the ComponentManager.
 {
+	// Ensure COMPONENT_TYPE is the subClass of BaseComponet.
+	static_assert(std::is_base_of<BaseComponent, COMPONENT_TYPE>::value, "The COMPONENT_TYPE must be derived from BaseComponent.");
+
 public:
 	ComponentManager();
 	~ComponentManager();
@@ -52,13 +55,18 @@ public:
 
 private:
 	std::size_t						_usedComponentCount;
-	static const ComponentTypeID	_TypeID		= ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
+	static const ComponentTypeID	_TypeID;
 	std::unordered_map<EntityID, COMPONENT_TYPE*> _lookUpTable;
 };
+
+// static member initialize.
+template<typename COMPONENT_TYPE, typename Traits>
+const ComponentTypeID ComponentManager<COMPONENT_TYPE, Traits>::_TypeID = ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
 
 template<typename COMPONENT_TYPE, typename Traits>
 inline ComponentManager<COMPONENT_TYPE, Traits>::ComponentManager()
 {
+	static_assert(std::is_base_of<BaseComponent, COMPONENT_TYPE>::value, "The COMPONENT_TYPE must be derived from BaseComponent.");
 }
 
 template<typename COMPONENT_TYPE, typename Traits>
