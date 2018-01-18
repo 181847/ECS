@@ -7,6 +7,8 @@
 namespace ECS
 {
 
+// This class have the ability to change the hostID of a component,
+// ComponentManager will extend it to get the ability.
 class BaseComponentSecretDesigner
 {
 protected:
@@ -27,8 +29,9 @@ struct ComponentManagerDefaultTraits
 //		static size_t MaxSize; // the max component count.
 template<typename COMPONENT_TYPE, typename Traits = ComponentManagerDefaultTraits>
 class ComponentManager
-	:public BaseComponentSecretDesigner // with this class the ComponentManager can change the Component's EntityID,
-	// and hide it from outside the ComponentManager.
+	:public BaseComponentSecretDesigner 
+	// With this supuer class, the ComponentManager can change the Component's EntityID,
+	// and hide it's setter from outside the ComponentManager.
 {
 public:
 	ComponentManager();
@@ -123,16 +126,16 @@ ComponentManager<COMPONENT_TYPE, Traits>::
 newComponnet
 (EntityID entityID, CONSTRUCT_ARGS&&...args)
 {
-	// prevent from create the component with the same entityID.
+	// Prevent from creating the component with the same entityID.
 	assert(nullptr == this->getComponent(entityID));
-	if (_usedComponentCount == Traits::MaxSize)
-	{
-		return nullptr;
-	}
+	// Overflow ?
+	assert(_usedComponentCount < Traits::MaxSize);
+
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
 	setComponentEntityID(pNewComp, entityID);
 	_lookUpTable[entityID] = pNewComp;
 	++_usedComponentCount;
+
 	return pNewComp;
 }
 
