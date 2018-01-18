@@ -21,9 +21,6 @@ namespace TestUnit
 
 void GetReady()
 {
-	ECS::ComponentIDGenerator::newID<IntComponent>();
-	ECS::ComponentIDGenerator::newID<FloatComponent>();
-	ECS::ComponentIDGenerator::newID<CharComponent>();
 }
 
 void AfterTest()
@@ -49,17 +46,10 @@ void AddTestUnit()
 			using TestIDGen = TypeTool::IDGenerator<TestIDGenStruct>;
 
 			// first part, try first newID(), then getID().
-			errorLogger += NOT_EQ(1, TestIDGen::newID<int>());
-			errorLogger += NOT_EQ(2, TestIDGen::newID<float>());
-			errorLogger += NOT_EQ(1, TestIDGen::getID<int>());
-			errorLogger += NOT_EQ(2, TestIDGen::getID<float>());
-
-			// second part, first getID(), which should return zero.
-			// and newID(), which also return zero.
-			errorLogger += NOT_EQ(0, TestIDGen::getID<unsigned int>());
-			errorLogger += NOT_EQ(0, TestIDGen::getID<unsigned char>());
-			errorLogger += NOT_EQ(0, TestIDGen::newID<unsigned int>());
-			errorLogger += NOT_EQ(0, TestIDGen::newID<unsigned char>());
+			errorLogger += NOT_EQ(1, TestIDGen::IDOf<int>());
+			errorLogger += NOT_EQ(2, TestIDGen::IDOf<float>());
+			errorLogger += NOT_EQ(1, TestIDGen::IDOf<int>());
+			errorLogger += NOT_EQ(2, TestIDGen::IDOf<float>());
 			
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
