@@ -10,15 +10,17 @@
 #include <TestEntityManager\TestComponentTypes.h>
 #include <TestEntityManager\TestEntityManagerTool.h>
 
+// Necessary variable declarations for MyTools\UnitTestModules.h
 DECLARE_TEST_UNITS;
 
-const int gComponentMaxSize = 1024;
 #define DeclareComponentManager(managerName, ComponentType)\
 	ECS::ComponentManager<ComponentType> managerName
 
 #define DeclareEntityManager(managerName)\
 	ECS::EntityManager<TestEnityTrait>* managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
 
+// A temporary struct to serve as the ComponetType,
+// tesing the ComponentManager.
 struct TestStructA
 	:public ECS::BaseComponent
 {
@@ -39,10 +41,18 @@ public:
 	}
 };
 
+#pragma region test can we instantial the ComponentManager with correct or error comopnet type?
+template class ECS::ComponentManager<TestStructA>;
+// Next line of code should cause a compile error when enabled.
+//template class ECS::ComponentManager<int>;
+#pragma endregion
+
 int TestStructA::deconstructCount = 0;
 const int TestStructA::initDataA = 2;
 const float TestStructA::initDataB = 2.222f;
 
+// alloca components for all the EntityID in the idList,
+// return how many errors happend.
 template<typename COMPONENT_TYPE>
 int newComponents(
 	ECS::ComponentManager<COMPONENT_TYPE>& cManager,
@@ -224,7 +234,10 @@ int CheckComponentDataEqual(
 }
 
 // check all the component with a container,
-// which implements the 'for range'.
+// which implements the 'for range loop'.
+// Using the idContainer to walk throught the ids,
+// get the coresponding component and compare it to the compareComponet
+// (which should be the same).
 template<typename COMPONENT_TYPE, typename ID_CONTAINER>
 CheckComponentsResult CheckComponentDataEqual(
 	ECS::ComponentManager<COMPONENT_TYPE>& pManager,
@@ -485,7 +498,7 @@ void AddTestUnit()
 		DeclareEntityManager(etManager);
 		DeclareComponentManager(tacManager, TestStructA);
 
-		errorLogger += randomTestCompnets(etManager, tacManager, gComponentMaxSize, 20, true);
+		errorLogger += randomTestCompnets(etManager, tacManager, ECS::DefaultComponentManagerTraits::MaxSize, 20, true);
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
 	}
