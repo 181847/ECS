@@ -224,10 +224,10 @@ void AddTestUnit()
 	// test Unit get mask of components
 	{
 		TEST_UNIT_START("get mask of components")
-			auto mask0010 = ECS::getComponentMask<IntComponent>();
-			auto mask1010 = ECS::getComponentMask<IntComponent, CharComponent>();
-			auto mask1100 = ECS::getComponentMask<CharComponent, FloatComponent>();
-			auto mask1110 = ECS::getComponentMask<IntComponent, FloatComponent, CharComponent>();
+			auto mask0010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent>();
+			auto mask1010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent, CharComponent>();
+			auto mask1100 = ECS::EntityManager<TestEnityTrait>::getComponentMask<CharComponent, FloatComponent>();
+			auto mask1110 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent, FloatComponent, CharComponent>();
 
 			errorLogger += NOT_EQ(mask0010, 2);
 			errorLogger += NOT_EQ(mask1010, 10);

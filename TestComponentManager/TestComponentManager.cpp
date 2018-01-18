@@ -666,13 +666,13 @@ void AddTestUnit()
 				errorLogger.LogIfNotEq(result.count, getEntityNumberOfComponents(CN::Int_Float_CharC));
 
 
-				result = CheckComponentDataEqual<IntComponent, ECS::EntityRange<IntComponent>>(
+				result = CheckComponentDataEqual(
 					intCManager, eManager->RangeEntities<IntComponent>(), invalidIntComponent);
 				errorLogger.LogIfNotEq(result.count, result.error);
-				result = CheckComponentDataEqual<FloatComponent, ECS::EntityRange<FloatComponent>>(
+				result = CheckComponentDataEqual(
 					floatCManager, eManager->RangeEntities<FloatComponent>(), invalidFloatComponent);
 				errorLogger.LogIfNotEq(result.count, result.error);
-				result = CheckComponentDataEqual<CharComponent, ECS::EntityRange<CharComponent>>(
+				result = CheckComponentDataEqual(
 					charCManager, eManager->RangeEntities<CharComponent>(), invalidCharComponent);
 				errorLogger.LogIfNotEq(result.count, result.error);
 			}
@@ -682,6 +682,7 @@ void AddTestUnit()
 	TEST_UNIT_END;
 
 	}
+
 }
 
 }// namespace TestUnit

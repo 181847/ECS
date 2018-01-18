@@ -9,6 +9,9 @@
 // this struct limit an entity manager's max entity count.
 struct TestEnityTrait {
 	static const size_t MaxEntityCount = 2048;
+	static const size_t MaxComponentTypes = 32;
+	typedef std::bitset<MaxComponentTypes> ComponentMask;
+	typedef ECS::ComponentIDGenerator ComponentIDGenerator;
 };
 
 
