@@ -40,28 +40,34 @@ public:
 	ComponentManager();
 	~ComponentManager();
 
+	ComponentManager(const typename ComponentManager<COMPONENT_TYPE, Traits>&) = delete;
+	ComponentManager<COMPONENT_TYPE, Traits>& operator =(const typename ComponentManager<COMPONENT_TYPE, Traits>& ) = delete;
+
 	// generate  a new component with the entityID,
 	// pass all the rest argument to the component's constructor.
 	template<typename ...CONSTRUCT_ARGS>
-	COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
+	COMPONENT_TYPE *		newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args);
+
 	// Get Component pointer through entityID, if not exist, return nullptr.
-	COMPONENT_TYPE *	getComponent(EntityID entityID);
+	COMPONENT_TYPE *		getComponent(EntityID entityID);
+
 	// Get Component pointer through entityID, if not exist, return nullptr.
-	COMPONENT_TYPE *	operator [](EntityID entityID);
+	COMPONENT_TYPE *		operator [](EntityID entityID);
+
 	// delete the component use the EntityID.
 	bool					removeComponent(EntityID removedID);
 	std::size_t				getMaxSize() const;
 	std::size_t				getUsedCount() const;
 
 private:
-	std::size_t						_usedComponentCount;
-	static const ComponentTypeID	_TypeID;
-	std::unordered_map<EntityID, COMPONENT_TYPE*> _lookUpTable;
+	std::size_t						m_usedComponentCount;
+	static const ComponentTypeID	m_typeID;
+	std::unordered_map<EntityID, COMPONENT_TYPE*> m_lookUpTable;
 };
 
 // static member initialize.
 template<typename COMPONENT_TYPE, typename Traits>
-const ComponentTypeID ComponentManager<COMPONENT_TYPE, Traits>::_TypeID = ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
+const ComponentTypeID ComponentManager<COMPONENT_TYPE, Traits>::m_typeID = ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
 
 template<typename COMPONENT_TYPE, typename Traits>
 inline ComponentManager<COMPONENT_TYPE, Traits>::ComponentManager()
@@ -79,8 +85,8 @@ inline COMPONENT_TYPE *
 ComponentManager<COMPONENT_TYPE, Traits>::getComponent
 (EntityID entityID)
 {
-	auto iterCmp = _lookUpTable.find(entityID);
-	if (iterCmp == _lookUpTable.end())
+	auto iterCmp = m_lookUpTable.find(entityID);
+	if (iterCmp == m_lookUpTable.end())
 	{
 		return nullptr;
 	}
@@ -99,8 +105,8 @@ inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE, Traits>::operator[](Ent
 template<typename COMPONENT_TYPE, typename Traits>
 inline bool ComponentManager<COMPONENT_TYPE, Traits>::removeComponent(EntityID removedID)
 {
-	auto iterCmp = _lookUpTable.find(removedID);
-	if (iterCmp == _lookUpTable.end())
+	auto iterCmp = m_lookUpTable.find(removedID);
+	if (iterCmp == m_lookUpTable.end())
 	{
 		return false;
 	}
@@ -109,8 +115,8 @@ inline bool ComponentManager<COMPONENT_TYPE, Traits>::removeComponent(EntityID r
 		// delete the pointer.
 		delete iterCmp->second;
 		// erase it from the map
-		_lookUpTable.erase(iterCmp);
-		--_usedComponentCount;
+		m_lookUpTable.erase(iterCmp);
+		--m_usedComponentCount;
 		return true;
 	}
 }
@@ -124,7 +130,7 @@ inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getMaxSize() const
 template<typename COMPONENT_TYPE, typename Traits>
 inline size_t ComponentManager<COMPONENT_TYPE, Traits>::getUsedCount() const
 {
-	return _usedComponentCount;
+	return m_usedComponentCount;
 }
 
 template<typename COMPONENT_TYPE, typename Traits>
@@ -137,12 +143,12 @@ newComponnet
 	// Prevent from creating the component with the same entityID.
 	assert(nullptr == this->getComponent(entityID));
 	// Overflow ?
-	assert(_usedComponentCount < Traits::MaxSize);
+	assert(m_usedComponentCount < Traits::MaxSize);
 
 	auto * pNewComp = new COMPONENT_TYPE(std::forward<CONSTRUCT_ARGS>(args)...);
 	setComponentEntityID(pNewComp, entityID);
-	_lookUpTable[entityID] = pNewComp;
-	++_usedComponentCount;
+	m_lookUpTable[entityID] = pNewComp;
+	++m_usedComponentCount;
 
 	return pNewComp;
 }
