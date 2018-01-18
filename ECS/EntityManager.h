@@ -7,7 +7,10 @@ namespace ECS
 {
 
 struct DefaultEntityManagerTraits {
+	static const size_t MaxComponentTypes = 32;
 	static const size_t MaxEntityCount = 2048;
+	typedef std::bitset<MaxComponentTypes> ComponentMask;
+	typedef ECS::ComponentIDGenerator ComponentIDGenerator;
 };
 
 // the job of EntityManager is to generator the EntityID
@@ -22,6 +25,8 @@ struct DefaultEntityManagerTraits {
 template<typename Traits = DefaultEntityManagerTraits>
 class EntityManager
 {
+	typedef typename Traits::ComponentMask ComponentMask;
+
 public:
 	// singleton
 	static EntityManager<Traits>* getInstance();
@@ -45,13 +50,21 @@ public:
 	
 	// get the iterator of the entity which should have the specific ComponentType.
 	template<typename ...COMPONENT_TYPES>
-	auto		RangeEntities();
+	EntityRange<Traits, COMPONENT_TYPES...>		RangeEntities();
+
+	// Get the combination Mask of the component types.
+	template<typename ...COMPONENT_TYPES>
+	static ComponentMask getComponentMask();
 	
 	size_t getSize() const;
 	size_t getUsedIDCount() const;
+
 private:
 	EntityManager();
 	~EntityManager();
+
+	EntityManager(const typename EntityManager<Traits> &) = delete;
+	EntityManager& operator = (const typename EntityManager<Traits> &) = delete;
 
 	// add another one for entityID 0,
 	// which means a invalid ID.
@@ -91,7 +104,7 @@ inline MaskResult EntityManager<Traits>::maskComponentType(EntityID entityID)
 #endif
 
 	// Pre store the mask of the specific combination of the multiple component types.
-	static const ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
+	static const ComponentMask combinedMask = getComponentMask<COMPONENT_TYPES...>();
 
 	// In the case that there is no ComponentTypes passed in,
 	// the combinedMask shouble be like "0000001" which means the last bit moved zero step,
@@ -120,7 +133,7 @@ template<typename ...COMPONENT_TYPES>
 inline bool EntityManager<Traits>::haveComponent(EntityID entityID)
 {
 	ASSERT(isValid(entityID));
-	const ComponentMask combinedMask = ECS::getComponentMask<COMPONENT_TYPES...>();
+	const ComponentMask combinedMask = getComponentMask<COMPONENT_TYPES...>();
 
 	if ((m_maskPool[entityID] & combinedMask) == combinedMask)
 	{
@@ -134,9 +147,20 @@ inline bool EntityManager<Traits>::haveComponent(EntityID entityID)
 
 template<typename Traits>
 template<typename ...COMPONENT_TYPES>
-inline auto EntityManager<Traits>::RangeEntities()
+inline EntityRange<Traits, COMPONENT_TYPES...> EntityManager<Traits>::RangeEntities()
 {
-	return EntityRange<COMPONENT_TYPES...>(Traits::MaxEntityCount, m_maskPool, m_freeList);
+	return EntityRange<Traits, COMPONENT_TYPES...>(Traits::MaxEntityCount, getComponentMask<COMPONENT_TYPES...>(), m_maskPool, m_freeList);
+}
+
+template<typename Traits>
+template<typename ...COMPONENT_TYPES>
+inline typename EntityManager<Traits>::ComponentMask EntityManager<Traits>::getComponentMask()
+{
+	static ComponentMask mask(0);
+	static const bool args[] = {
+		(false), // in case that the COMPONENT_TYPES is zero.
+		(mask |= 1ull << Traits::ComponentIDGenerator::IDOf<COMPONENT_TYPES>(), false)... };
+	return mask;
 }
 
 template<typename Traits>
