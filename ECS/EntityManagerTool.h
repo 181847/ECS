@@ -29,9 +29,11 @@ public:
 
 
 // The iterator to traverse the desired entity.
-template<typename ...COMPONENT_TYPES>
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
 class EntityIter
 {
+	typedef typename EntityManagerTraits::ComponentMask ComponentMask;
+
 private:
 	// target entity componetMask
 	const ComponentMask&		_desiredMask;
@@ -58,16 +60,18 @@ public:
 
 	EntityIter& operator ++();
 
-	bool operator != (const EntityIter<COMPONENT_TYPES...>& other) const;
+	bool operator != (const EntityIter<EntityManagerTraits, COMPONENT_TYPES...>& other) const;
 
 private:
 	EntityID getInternalStart();
 	EntityID getInternalEnd();
 };// class EntityIter
 
-template<typename ...COMPONENT_TYPES>
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
 class EntityRange
 {
+	typedef typename EntityManagerTraits::ComponentMask ComponentMask;
+
 private:
 	// target entity componetMask
 	const ComponentMask				_desiredMask;
@@ -80,18 +84,19 @@ private:
 
 public:
 	EntityRange(
-		const size_t&				maxEntityCount, 
+		const size_t&				maxEntityCount,
+		const ComponentMask &		desiredMask,
 		const ComponentMask* const	maskPool,
 		PEntityFreeBlock			pFreeList);
 
-	EntityIter<COMPONENT_TYPES...> begin();
+	EntityIter<EntityManagerTraits, COMPONENT_TYPES...> begin();
 	
-	EntityIter<COMPONENT_TYPES...> end();
+	EntityIter<EntityManagerTraits, COMPONENT_TYPES...> end();
 };
 
 
-template<typename ...COMPONENT_TYPES>
-inline EntityIter<COMPONENT_TYPES...>::EntityIter(
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::EntityIter(
 	const ComponentMask&				desiredMask,
 	const size_t &						maxEntityCount,
 	const ComponentMask * const			pMaskPool,
@@ -108,13 +113,14 @@ inline EntityIter<COMPONENT_TYPES...>::EntityIter(
 {
 }
 
-template<typename ...COMPONENT_TYPES>
-inline EntityID EntityIter<COMPONENT_TYPES...>::operator*()
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityID EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::operator*()
 {
 	return _currID;
 }
-template<typename ...COMPONENT_TYPES>
-inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator++()
+
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityIter<EntityManagerTraits, COMPONENT_TYPES...> & EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::operator++()
 {
 	static EntityID internalStart = _currID;
 	static EntityID internalEnd = getInternalEnd();
@@ -161,44 +167,46 @@ inline EntityIter<COMPONENT_TYPES...> & EntityIter<COMPONENT_TYPES...>::operator
 	// if the _currID greater than the _maxEntityCount,
 	// it means no avaliable id was found this time, 
 	// return 0, and the 'range for loop' should be stopped when it return 0.
-	_currID = _currID > _maxEntityCount ? 0 : _currID;
+	_currID = _currID > EntityManagerTraits::MaxEntityCount ? 0 : _currID;
 	
 	return *this;
 }
 
-template<typename ...COMPONENT_TYPES>
-inline bool EntityIter<COMPONENT_TYPES...>::operator!=(const EntityIter<COMPONENT_TYPES...> & end) const
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline bool EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::operator!=(const EntityIter<EntityManagerTraits, COMPONENT_TYPES...> & end) const
 {
 	return _currID != 0;
 }
 
-template<typename ...COMPONENT_TYPES>
-inline EntityID EntityIter<COMPONENT_TYPES...>::getInternalStart()
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityID EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::getInternalStart()
 {
 	return _internalHead == nullptr ? 1 : _internalHead->end + 1;
 }
 
-template<typename ...COMPONENT_TYPES>
-inline EntityID EntityIter<COMPONENT_TYPES...>::getInternalEnd()
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityID EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::getInternalEnd()
 {
 	return _internalTail == nullptr ? _maxEntityCount : _internalTail->start - 1;
 }
 
-template<typename ...COMPONENT_TYPES>
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
 inline 
-EntityRange<COMPONENT_TYPES...>::EntityRange(
+EntityRange<EntityManagerTraits, COMPONENT_TYPES...>::EntityRange(
 	const size_t&				maxEntityCount,
+	const ComponentMask &		desiredMask,
 	const ComponentMask* const	maskPool,
 	PEntityFreeBlock			pFreeList)
 	:
-	_desiredMask(getComponentMask<COMPONENT_TYPES...>()),
+	_desiredMask(desiredMask),
 	_maxEntityCount(maxEntityCount),
 	_maskPool(maskPool),
 	_pFreeList(pFreeList)
 {
 }
-template<typename ...COMPONENT_TYPES>
-inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
+
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityIter<EntityManagerTraits, COMPONENT_TYPES...> EntityRange<EntityManagerTraits, COMPONENT_TYPES...>::begin()
 {
 	// try to get the first desiredID
 	EntityID firstId;
@@ -251,15 +259,17 @@ inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::begin()
 	// have we find through all the entities?
 	// If we did, it means that we don't find even one entity 
 	// which meet our requirement, set it to zero.
-	firstId = firstId > _maxEntityCount ? 0 : firstId;
+	firstId = firstId > EntityManagerTraits::MaxEntityCount ? 0 : firstId;
 	
-	return EntityIter<COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, internalHead, internalTail, firstId);
+	return EntityIter<EntityManagerTraits, COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, internalHead, internalTail, firstId);
 }
-template<typename ...COMPONENT_TYPES>
-inline EntityIter<COMPONENT_TYPES...> EntityRange<COMPONENT_TYPES...>::end()
+
+template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
+inline EntityIter<EntityManagerTraits, COMPONENT_TYPES...> EntityRange<EntityManagerTraits, COMPONENT_TYPES...>::end()
 {
 	// This end() return a iterator which has no use,
 	// because all the functionality is implement in the iterator of the begin().
-	return EntityIter<COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, nullptr, nullptr, 0);
+	return EntityIter<EntityManagerTraits, COMPONENT_TYPES...>(_desiredMask, _maxEntityCount, _maskPool, nullptr, nullptr, 0);
 }
+
 }// namespace ECS
