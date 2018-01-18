@@ -10,7 +10,6 @@ struct DefaultEntityManagerTraits {
 	static const size_t MaxEntityCount = 2048;
 };
 
-
 // the job of EntityManager is to generator the EntityID
 // EntityID is just a number,
 // inside the EntityManager, for each EntityID,
@@ -36,11 +35,6 @@ public:
 	// check if the checkID is a valid id;
 	bool		isValid(EntityID checkID);
 
-	// this function is major used in temaskComponentType<>(),
-	// to mask only one type of Component.
-	template<typename COMPONENT_TYPE>
-	MaskResult	maskSingleComponentType(EntityID entityID);
-
 	// to mask an entity component types with all the template args.
 	template<typename ...COMPONENT_TYPES>
 	MaskResult	maskComponentType(EntityID entityID);
@@ -65,40 +59,6 @@ private:
 	PEntityFreeBlock	m_freeList;
 	size_t				m_usedID;
 };
-
-template<typename Traits>
-template<typename COMPONENT_TYPE>
-inline MaskResult EntityManager<Traits>::maskSingleComponentType(EntityID entityID)
-{
-	ASSERT(isValid(entityID));
-#ifdef _DEBUG
-	// if in the debug mode.
-	// use a static var to store the componentTypeID.
-	static const ComponentTypeID idForTheComponentType =
-		ComponentIDGenerator::IDOf<COMPONENT_TYPE>();
-	// the id must greater than 0;
-	ASSERT(idForTheComponentType > 0 && "no ID found with the ComponentType, please ensure you call newID() with the ComponentType first.");
-
-	// always use a static var to store the mask for the component type.
-	// 1ull means 'number one whose type is unsigned long long'
-	static const ComponentMask maskForTheComponentType{1ull << idForTheComponentType };
-#else
-	static ComponentMask maskForTheComponentType(1ull << ComponentIDGenerator::getID<LAST_COMPONENT_TYPE>());
-#endif
-
-	// does the entity already have the componentType?
-	if ((m_maskPool[entityID] & maskForTheComponentType).any())
-	{
-		return MaskResultFlag::RedundancyComponent;
-	}
-
-	//TODO: here waste one bit in the lower bitset, it can be improved in the future.
-	// Or here can just make it stand for the invalid component mask
-	// now just left it.
-	m_maskPool[entityID] |= maskForTheComponentType;
-
-	return MaskResultFlag::Success;
-}
 
 template<typename Traits>
 template<typename ...COMPONENT_TYPES>
