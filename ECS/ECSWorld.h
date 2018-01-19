@@ -15,6 +15,8 @@ namespace ECS
 template<typename EntityManagerTraits, typename ...ComponentType>
 class ECSWorld
 {
+	// Give the Implemented ECSWorld an alias.
+	using ECSWorldAlias = ECSWorld<EntityManagerTraits, ComponentType...>;
 public:
 	// Create a new Entity, return its id.
 	EntityID NewEntity();
@@ -32,7 +34,9 @@ public:
 	bool ForOne(EntityID id, std::function<void(COMPONENT_TYPE_LIST*...)> theJob);
 
 	// Add a component to the entity, return success or not.
-	template<typename ...COMPONENT_CONSTRUCT_ARGS>
+	// etc. it the ID is invalid, it will return false,
+	// but if the space of the componentManager is not enough the assertion will happen.
+	template<typename COMPONENT_TYPE, typename ...COMPONENT_CONSTRUCT_ARGS>
 	bool AttachTo(EntityID targetID, COMPONENT_CONSTRUCT_ARGS&&...args);
 
 	// Detach a component from the entity, return success or not.
@@ -53,9 +57,15 @@ private:
 	static ECS::EntityManager<EntityManagerTraits>* s_pEntityManager;
 };
 
+#pragma region ECSWorld static members definations
+
 // Initialize static member.
 template<typename EntityManagerTraits, typename ...ComponentType>
-ECS::EntityManager<EntityManagerTraits>* s_pEntityManager = ECS::EntityManager<EntityManagerTraits>::getInstance();
+ECS::EntityManager<EntityManagerTraits>* ECSWorld<EntityManagerTraits, ComponentType...>::s_pEntityManager = ECS::EntityManager<EntityManagerTraits>::getInstance();
+
+#pragma endregion
+
+#pragma region ECSWorld function definations
 
 template<typename EntityManagerTraits, typename ...ComponentType>
 template<typename ...COMPONENT_TYPE_LIST>
@@ -68,6 +78,36 @@ inline void ECSWorld<EntityManagerTraits, ComponentType...>::Foreach(std::functi
 	{
 		theJob(id, getComponent<COMPONENT_TYPE_LIST>(id)...);
 	}
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename ...COMPONENT_TYPE_LIST>
+inline bool ECSWorld<EntityManagerTraits, ComponentType...>::ForOne(EntityID id, std::function<void(COMPONENT_TYPE_LIST*...)> theJob)
+{
+	if ( ! s_pEntityManager->isValid(id))
+	{
+		// The id is wrong.
+		return false;
+	}
+
+	theJob(getComponent<COMPONENT_TYPE_LIST>(id)...);
+
+	return true;
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename COMPONENT_TYPE, typename ...COMPONENT_CONSTRUCT_ARGS>
+inline bool ECSWorld<EntityManagerTraits, ComponentType...>::
+AttachTo(EntityID targetID, COMPONENT_CONSTRUCT_ARGS && ...args)
+{
+	if ( ! s_pEntityManager->isValid(targetID))
+		return false;
+
+	COMPONENT_TYPE * pNewComponent = 
+		ECSWorldAlias::getComponentManager<COMPONENT_TYPE>()
+		->newComponnet<COMPONENT_CONSTRUCT_ARGS...>(targetID, std::forward<COMPONENT_CONSTRUCT_ARGS>(args)...);
+	s_pEntityManager->maskComponentType<ComponentType...>(targetID);
+	return true;
 }
 
 template<typename EntityManagerTraits, typename ...ComponentType>
@@ -91,5 +131,7 @@ inline EntityID ECSWorld<EntityManagerTraits, ComponentType...>::NewEntity()
 {
 	return s_pEntityManager->newEntity();
 }
+
+#pragma endregion
 
 }// namespace ECS
