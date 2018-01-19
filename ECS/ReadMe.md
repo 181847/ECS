@@ -3,10 +3,10 @@
 * ComponentManager：通过EntityID存取组件对象
 * ECSWorld：管理以上两种类型的Manager，统一规范（**尚未完全实现**）
 
-#### EntityManager\<Traits\>
+## EntityManager\<Traits\>
 <div style="background: #999999">
 
-##### 模板Traits
+### 模板Traits
 
 此模板应该定义以下常量或类型：
 
@@ -19,7 +19,7 @@ const size_t | MaxComponentTypes | EntityManager可以区分的最大数量的�
 
 <div style="background: #aaaaaa">
 
-##### 函数：
+### 函数：
 * EntityID	newEntity()  
   * 申请一个新的Entity，返回EntityID，当返回0的时候代表分配失败。
 * bool destoryEntity(EntityID destoriedID)
@@ -54,12 +54,14 @@ for (EntityID & id : entityManager->RangeEntities<IntComponent>())
 
 ----
 
-#### CompoentManager\<COMPONENT_TYPE\>
+## CompoentManager\<COMPONENT_TYPE\>
 <div style="background: #999999">
+
+### 模板
 
 <div style="background: #aaaaaa">
 
-##### 函数：
+### 函数：
 * 构造函数
   * 构造函数接受一个size_t类型的值，表示最大能够容纳的Component的数量_
 * template<...CONSTRUCT_ARGS> COMPONENT_TYPE *	newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
@@ -81,6 +83,44 @@ for (EntityID & id : entityManager->RangeEntities<IntComponent>())
   * 返回Traits::MaxSize，ComponentManager能够容纳的最大的组件数量
 * std::size_t getUsedCount()
   * 已分配的组件数量
+
+</div>
+</div>
+
+
+## ECSWorld\<EntityManagerTraits, ...ComponentType\>
+<div style="background: #999999">
+
+一个ECSWorld包含一个EntityManager，多个ComponentManager。
+
+模板参数定义：
+
+模板参数  | 说明
+--|--
+EntityManagerTraits | 唯一的一个EntityManager的属性模板，详情参考EntityManager的定义
+CompopnentType  |   所有要用到的Component类型。
+
+<div style="background: #aaaaaa">
+
+### 函数：
+* EntityID NewEntity()
+  * 申请一个新的Entity，并返回它的ID，创建失败时触发断言
+* template<...> void Foreach(std::function<...> theJob)
+  * 遍历包含某个类型的EntityID，使用theJob来针对这个Entity执行操作
+  * **theJob**的函数签名为void theJob(EntityID, ComponentTypeA, ComponentTypeB, ...)
+  * Foreach是一个模板函数，参数中指定的需要遍历的组件类型，例如<ComponentTypeA, ComponentTypeB, ...>
+  * 为了方便代码的定义，**theJob**中的参数类型定义可以使用auto进行自动推导。
+    * ecsWorld->Foreach<IntComponent, FloatComponent>(\[\](EntityID id, auto * pInt, auto * pFlt){  ... THE CODE ...   });
+* template<...> bool ForOne(EntityID id, std::function<...> theJob);
+  * 针对某一个Entity执行theJob中的代码
+  * 如果这个ID**无效**，返回**false**，否则返回**true**
+  * **theJob** 的函数签名为 void theJob(ComponentTypeA, ComponentTypeB, ...)
+  * ForOne的模板参数需要指定对应的组件类型
+  * 此函数不确保某个**实体**必定包含某个类型的**组件**，但是保证这个**组件**一定被**ECSWorld**支持，如果相应的实体不存在某个组件，那么在**std::function**中相应类型的指针将被赋值为**nullptr**
+* template<COMPONENT_TYPE, ...ARGS> bool AttachTo(EntityID targetID, ...args)
+  * 创建一个新的组件，并且将这个组件绑定到指定的ID上
+  * 如果这个ID**无效**，返回**false**，否则返回**true**
+  * 如果相关组件管理者的容量不足，将会触发断言
 
 </div>
 </div>
