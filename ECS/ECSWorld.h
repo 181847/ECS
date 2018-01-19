@@ -17,6 +17,19 @@ class ECSWorld
 {
 	// Give the Implemented ECSWorld an alias.
 	using ECSWorldAlias = ECSWorld<EntityManagerTraits, ComponentType...>;
+
+	// Wrap the IsAllOf struct to check whether types is in the ComponentType...,
+	// or whether the ECSWorld support the CHECK_TYPES.
+	// Usage:
+	//		Asume our ECSWorld is ECSWorld<EMTraits, IntComponent, FloatComponent>,
+	//		CheckTypeSupproted<	IntComponent				>::value		=> true
+	//		CheckTypeSupproted<	FloatComponent				>::value		=> true
+	//		CheckTypeSupproted<	IntComponent, FloatComponent>::value		=> true
+	//		CheckTypeSupproted<								>::value		=> false
+	//		CheckTypeSupproted<	int							>::value		=> false
+	template<typename ...CHECK_TYPES>
+	using CheckTypeSupported = TypeTool::IsAllOf<TypeTool::TypeContainer<CHECK_TYPES...>, ComponentType...>;
+
 public:
 	// Create a new Entity, return its id.
 	EntityID NewEntity();
@@ -71,7 +84,7 @@ template<typename EntityManagerTraits, typename ...ComponentType>
 template<typename ...COMPONENT_TYPE_LIST>
 inline void ECSWorld<EntityManagerTraits, ComponentType...>::Foreach(std::function<void(EntityID id, COMPONENT_TYPE_LIST*...args)> theJob)
 {
-	static_assert(TypeTool::IsAllOf<TypeTool::TypeContainer<COMPONENT_TYPE_LIST...>, ComponentType...>::value,
+	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
 		"Exist not supported component type");
 
 	for (EntityID  id : s_pEntityManager->RangeEntities<COMPONENT_TYPE_LIST...>())
@@ -84,6 +97,9 @@ template<typename EntityManagerTraits, typename ...ComponentType>
 template<typename ...COMPONENT_TYPE_LIST>
 inline bool ECSWorld<EntityManagerTraits, ComponentType...>::ForOne(EntityID id, std::function<void(COMPONENT_TYPE_LIST*...)> theJob)
 {
+	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
+		"Exist not supported component type");
+
 	if ( ! s_pEntityManager->isValid(id))
 	{
 		// The id is wrong.
@@ -100,6 +116,9 @@ template<typename COMPONENT_TYPE, typename ...COMPONENT_CONSTRUCT_ARGS>
 inline bool ECSWorld<EntityManagerTraits, ComponentType...>::
 AttachTo(EntityID targetID, COMPONENT_CONSTRUCT_ARGS && ...args)
 {
+	static_assert(CheckTypeSupported<COMPONENT_TYPE>::value,
+		"Not supported component type");
+
 	if ( ! s_pEntityManager->isValid(targetID))
 		return false;
 
@@ -114,6 +133,9 @@ template<typename EntityManagerTraits, typename ...ComponentType>
 template<typename COMPONENT_TYPE>
 inline ECS::ComponentManager<COMPONENT_TYPE>* ECSWorld<EntityManagerTraits, ComponentType...>::getComponentManager()
 {
+	static_assert(CheckTypeSupported<COMPONENT_TYPE>::value,
+		"Not supported component type");
+
 	static ComponentManager<COMPONENT_TYPE> s_componentManager(ECS::DefaultComponentManagerTraits::MaxSize);
 	return &s_componentManager;
 }
@@ -122,6 +144,9 @@ template<typename EntityManagerTraits, typename ...ComponentType>
 template<typename COMPONENT_TYPE>
 inline COMPONENT_TYPE * ECSWorld<EntityManagerTraits, ComponentType...>::getComponent(ECS::EntityID id)
 {
+	static_assert(CheckTypeSupported<COMPONENT_TYPE>::value,
+		"Not supported component type");
+
 	static ComponentManager<COMPONENT_TYPE>* s_pAnotherManager = getComponentManager<COMPONENT_TYPE>();
 	return s_pAnotherManager->getComponent(id);
 }
