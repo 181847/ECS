@@ -125,7 +125,6 @@
   <ItemGroup>
     <ClCompile Include="BaseComponent.cpp" />
     <ClCompile Include="ECS.cpp" />
-    <ClCompile Include="ECSWorld.cpp" />
     <ClCompile Include="EntityManager.cpp" />
   </ItemGroup>
   <ItemGroup>
