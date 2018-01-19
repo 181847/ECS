@@ -43,8 +43,37 @@ void AddTestUnit()
 	TEST_UNIT_START("declare ecs world")
 		ECS::ECSWorld<ECS::DefaultEntityManagerTraits, IntComponent, DoubleComponent, FloatComponent, CharComponent> testECSWorld;
 		
-	testECSWorld.Foreach<IntComponent, CharComponent>(
+		testECSWorld.Foreach<IntComponent, CharComponent>(
 		[](ECS::EntityID id, auto*, auto*)->void {});
+
+		using namespace ECS;
+		
+		EntityID theFirstID = testECSWorld.NewEntity();
+
+		
+		testECSWorld.AttachTo<IntComponent>(theFirstID, 4);
+
+		testECSWorld.Foreach<IntComponent>([&](EntityID id, auto * pInt) 
+		{
+			errorLogger.LogIfNotEq(id, theFirstID);
+			errorLogger.LogIfNotEq(pInt->data, 4);
+		});
+
+		testECSWorld.Foreach<IntComponent>([&](auto id, auto * pInt)
+		{
+			pInt->data = 8;
+		});
+
+		testECSWorld.Foreach<IntComponent>([&](auto id, auto * pInt)
+		{
+			errorLogger.LogIfNotEq(id, theFirstID);
+			errorLogger.LogIfNotEq(pInt->data, 8);
+		});
+
+		testECSWorld.ForOne<IntComponent>(theFirstID, [&](auto * pInt)
+		{
+			errorLogger.LogIfNotEq(pInt->data, 8);
+		});
 
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
