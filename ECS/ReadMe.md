@@ -32,6 +32,7 @@ const size_t | MaxComponentTypes | EntityManager可以区分的最大数量的�
   * 为某个EntityID同时蒙版多个组件类型，返回蒙版的结果。
 * template\<...T\> bool haveComponent(EntityID entityID)
   * 检查某个EntityID是否包含指定的多个（或者单个）组件的蒙版。
+  * 如果这个ID尚未被分配，则将触发断言。
 * template\<...T\> auto RangeEntities();
   * 返回一个用于遍历EntityID的迭代器
   * 例如
@@ -121,6 +122,10 @@ CompopnentType  |   所有要用到的Component类型。
   * 创建一个新的组件，并且将这个组件绑定到指定的ID上
   * 如果这个ID**无效**，返回**false**，否则返回**true**
   * 如果相关组件管理者的容量不足，将会触发断言
+* template<COMPONENT_TYPE_LIST...> bool DoHas(EntityID targetID)
+  * 检查某个实体是否包含相应的组件类型 *（多个）*
+  * 如果实体不存在，将会触发断言
+  * 如果DoHas的模板参数为**空**，或者存在不被**ECSWorld**支持的类型，将会引发编译错误。
 
 </div>
 </div>
