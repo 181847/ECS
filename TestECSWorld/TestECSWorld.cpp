@@ -74,6 +74,9 @@ void AddTestUnit()
 			errorLogger.LogIfNotEq(pInt->data, 8);
 		});
 
+		errorLogger.LogIfNotEq(true, testECSWorld.DoHas<IntComponent>(theFirstID));
+		errorLogger.LogIfNotEq(false, testECSWorld.DoHas<FloatComponent>(theFirstID));
+
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
 #pragma endregion
