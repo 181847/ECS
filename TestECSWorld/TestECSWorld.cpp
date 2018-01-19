@@ -41,16 +41,15 @@ void AddTestUnit()
 
 #pragma region declare ecs world
 	TEST_UNIT_START("declare ecs world")
-		ECS::ECSWorld<ECS::DefaultEntityManagerTraits, IntComponent, DoubleComponent, FloatComponent, CharComponent> testECSWorld;
-		
-		testECSWorld.Foreach<IntComponent, CharComponent>(
-		[](ECS::EntityID id, auto*, auto*)->void {});
+
+		using TestECSWorldType = ECS::ECSWorld<ECS::DefaultEntityManagerTraits, IntComponent, DoubleComponent, FloatComponent, CharComponent>;
+		TestECSWorldType testECSWorld;
 
 		using namespace ECS;
 		
 		EntityID theFirstID = testECSWorld.NewEntity();
-
 		
+		// Add an IntComponent to the FirstID.
 		testECSWorld.AttachTo<IntComponent>(theFirstID, 4);
 
 		testECSWorld.Foreach<IntComponent>([&](EntityID id, auto * pInt) 
