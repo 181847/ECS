@@ -58,7 +58,7 @@ public:
 
 	// Check one entity, dose it have all the components?
 	template<typename ...COMPONENT_TYPE_LIST>
-	bool DoHave(EntityID targetID);
+	bool DoHas(EntityID targetID);
 
 private:
 	template<typename COMPONENT_TYPE>
@@ -125,8 +125,18 @@ AttachTo(EntityID targetID, COMPONENT_CONSTRUCT_ARGS && ...args)
 	COMPONENT_TYPE * pNewComponent = 
 		ECSWorldAlias::getComponentManager<COMPONENT_TYPE>()
 		->newComponnet<COMPONENT_CONSTRUCT_ARGS...>(targetID, std::forward<COMPONENT_CONSTRUCT_ARGS>(args)...);
-	s_pEntityManager->maskComponentType<ComponentType...>(targetID);
+	s_pEntityManager->maskComponentType<COMPONENT_TYPE>(targetID);
 	return true;
+}
+
+template<typename EntityManagerTraits, typename ...ComponentType>
+template<typename ...COMPONENT_TYPE_LIST>
+inline bool ECSWorld<EntityManagerTraits, ComponentType...>::DoHas(EntityID targetID)
+{
+	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
+		"Exist not supported component type");
+
+	return s_pEntityManager->haveComponent<COMPONENT_TYPE_LIST...>(targetID);
 }
 
 template<typename EntityManagerTraits, typename ...ComponentType>
