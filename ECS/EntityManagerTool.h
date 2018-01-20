@@ -94,7 +94,6 @@ public:
 	EntityIter<EntityManagerTraits, COMPONENT_TYPES...> end();
 };
 
-
 template<typename EntityManagerTraits, typename ...COMPONENT_TYPES>
 inline EntityIter<EntityManagerTraits, COMPONENT_TYPES...>::EntityIter(
 	const ComponentMask&				desiredMask,
