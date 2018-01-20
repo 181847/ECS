@@ -14,6 +14,16 @@ struct TestEnityTrait {
 	typedef ECS::ComponentIDGenerator ComponentIDGenerator;
 };
 
+namespace EntityManagerTool
+{
+template<typename EMTraits>
+int NewEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList, const size_t count);
+
+template<typename EMTraits>
+int DeleteEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
+
+void Shuffle(std::vector<ECS::EntityID>& idList);
+}
 
 // get batch Entities,
 // return errors count, (if no error, return 0)
@@ -87,11 +97,11 @@ inline int testEntityManager(
 		// destory the entityID
 		if (randomPerBatch)
 		{
-			RandomTool::RandomSequence(idList.size(), &randomIndex, i + randSeed);
+			RandomTool::Func::Shuffle(randomIndex, i + randSeed);
 		}
 		else
 		{
-			RandomTool::RandomSequence(idList.size(), &randomIndex, randSeed);
+			RandomTool::Func::Shuffle(randomIndex, randSeed);
 		}
 
 		for (auto randi : randomIndex)
@@ -216,7 +226,7 @@ inline int randomIdListArray(
 	// for each idList set a random size for it.
 	RandomTool::RandomSet<size_t> randomIdListSize;
 	randomIdListSize.setSeed(idListSizeSeed);
-	randomIdListSize.randomNumbers(idListArrayCount, minListSize, maxListSize);
+	randomIdListSize.RandomNumbers(idListArrayCount, minListSize, maxListSize);
 
 	// allocate all the IDs for later use.
 	size_t totalIDCount = 0;
@@ -229,7 +239,7 @@ inline int randomIdListArray(
 	// ready to randomly dispatch all the id to different idList
 	RandomTool::RandomSet<size_t> randomIDDisaptchIndices;
 	randomIDDisaptchIndices.setSeed(dispatchIDSeed);
-	randomIDDisaptchIndices.randomSequence(totalIDCount);
+	randomIDDisaptchIndices.RandomSequence(totalIDCount);
 
 	// dispatch the ids
 	size_t randomDispatchIndexLocation = 0;
