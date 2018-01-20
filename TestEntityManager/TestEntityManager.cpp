@@ -30,16 +30,14 @@ void AfterTest()
 
 void AddTestUnit()
 {
-	// test Unit always success test unit
-	{
+#pragma region test Unit always success test unit
 	TEST_UNIT_START("always success test unit")
 
 		return true;
 	TEST_UNIT_END;
-	}// test Unit always success test unit
+#pragma endregion
 
-	// test Unit check IDGenerator's newID() and getID()
-	{
+#pragma region check IDGenerator's newID() and getID()
 		TEST_UNIT_START("check IDGenerator's newID() and getID()")
 			// a temp struct to create a series id.
 			struct TestIDGenStruct {};
@@ -53,10 +51,9 @@ void AddTestUnit()
 			
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}
+#pragma endregion
 
-	// test Unit create EntityManager
-	{
+#pragma region creat EntityManager
 	TEST_UNIT_START("creat EntityManager")
 		int error = 0;
 		/*ECS::EntityManager* eManager = 
@@ -75,10 +72,10 @@ void AddTestUnit()
 
 		return error == 0;
 	TEST_UNIT_END;
-	}// test Unit create EntityManager
+#pragma endregion
 
 	// test Unit generate ID, and random destroy
-	{
+#pragma region
 	TEST_UNIT_START("generate ID, and random destroy")
 		int error = 0;
 		DeclareEntityManager(eManager);
@@ -86,10 +83,10 @@ void AddTestUnit()
 		error += testEntityManager(eManager, 300, true, 30);
 		return error == 0;
 	TEST_UNIT_END;
-	}// test Unit generat ID, and random destoried
+#pragma endregion test Unit generat ID, and random destoried
 
 	// test Unit test checkInvalid EntityID
-	{
+#pragma region
 	TEST_UNIT_START("test checkInvalid EntityID")
 		DeclareEntityManager(eManager);
 
@@ -106,7 +103,7 @@ void AddTestUnit()
 		RandomTool::RandomSet<size_t> randomIndices;
 		randomIndices.setSeed(1);
 		// we generate a random indices for the idList from 0 to entityCount - 1
-		randomIndices.randomSequence(entityCount);
+		randomIndices.RandomSequence(entityCount);
 
 		// use an array to indicate the corresponding id in the idList is valid.
 		std::vector<bool> validFlagList(entityCount);
@@ -153,10 +150,10 @@ void AddTestUnit()
 
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
-	}// test Unit test checkInvalid EntityID
+#pragma endregion test Unit test checkInvalid EntityID
 
 	// test Unit test componentMask use EntityManager
-	{
+#pragma region
 		TEST_UNIT_START("test componentMask use EntityManager")
 			DeclareEntityManager(eManager);
 
@@ -170,7 +167,7 @@ void AddTestUnit()
 
 			RandomTool::RandomSet<size_t> randomIndices;
 			randomIndices.setSeed(1);
-			randomIndices.randomSequence(idCount);
+			randomIndices.RandomSequence(idCount);
 
 			// part one will mask two type of component[IntComponet, FloatComponent].
 			// part two will only mask with IntComponent.
@@ -219,10 +216,10 @@ void AddTestUnit()
 			errorLogger += destoryEntities(eManager, &idList);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}// test Unit test componentMask use EntityManager
+#pragma endregion test Unit test componentMask use EntityManager
 
 	// test Unit get mask of components
-	{
+#pragma region
 		TEST_UNIT_START("get mask of components")
 			auto mask0010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent>();
 			auto mask1010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent, CharComponent>();
@@ -235,10 +232,10 @@ void AddTestUnit()
 			errorLogger += NOT_EQ(mask1110, 14);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}
+#pragma endregion
 
 	// test Unit check componentType of the entity
-	{
+#pragma region
 		TEST_UNIT_START("check componentType of the entity")
 			DeclareEntityManager(eManager);
 
@@ -252,7 +249,7 @@ void AddTestUnit()
 
 			RandomTool::RandomSet<size_t> randomIndices;
 			randomIndices.setSeed(1);
-			randomIndices.randomSequence(idCount);
+			randomIndices.RandomSequence(idCount);
 
 			// part one will mask two type of component[IntComponet, FloatComponent].
 			// part two will only mask with IntComponent.
@@ -304,10 +301,10 @@ void AddTestUnit()
 			errorLogger += destoryEntities(eManager, &idList);
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}
+#pragma endregion
 
 	// test Unit get entityIter.
-	{
+#pragma region
 		TEST_UNIT_START("get entityIter")
 
 			DeclareEntityManager(eManager);
@@ -359,10 +356,10 @@ void AddTestUnit()
 
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}
+#pragma endregion
 
 	// test Unit test traverse the entity.
-	{
+#pragma region
 		TEST_UNIT_START("test traverse the entity.")
 			DeclareEntityManager(eManager);
 
@@ -472,7 +469,7 @@ void AddTestUnit()
 			
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
-	}
+#pragma endregion
 }// function void AddTestUnit()
 
 
