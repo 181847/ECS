@@ -7,7 +7,7 @@
 #include <algorithm>
 
 // this struct limit an entity manager's max entity count.
-struct TestEnityTrait {
+struct TestEntityTraits {
 	static const size_t MaxEntityCount = 2048;
 	static const size_t MaxComponentTypes = 32;
 	typedef std::bitset<MaxComponentTypes> ComponentMask;
@@ -17,106 +17,50 @@ struct TestEnityTrait {
 namespace EntityManagerTool
 {
 template<typename EMTraits>
-int NewEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList, const size_t count);
+void NewEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList, const int count);
 
 template<typename EMTraits>
-int DeleteEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
+void DeleteEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
 
-void Shuffle(std::vector<ECS::EntityID>& idList);
-}
+template<typename EMTraits, typename ...COMPONENT_TYPE_LIST>
+void MaskComponent(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
 
-// get batch Entities,
-// return errors count, (if no error, return 0)
-int newEntitis(
-	ECS::EntityManager<TestEnityTrait>* eManager,
-	std::vector<ECS::EntityID> * idList,
-	const size_t count)
+
+
+template<typename EMTraits>
+void NewEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList, const int count)
 {
-	int error = 0;
+	idList.resize(count);
 
-	idList->clear();
-	for (size_t i = 0; i < count; ++i)
+	for (int i = 0; i < count; ++i)
 	{
-		ECS::EntityID newID = eManager->newEntity();
-		if (newID == 0)
-		{
-			++error;
-			break;
-		}
-		idList->push_back(newID);
+		idList[i] = pEntityManager->newEntity();
 	}
-
-	return error;
 }
 
-// destory the batch Entitys£¬ and clear the idList.
-// return errors count, (if no error, return 0)
-int destoryEntities(
-	ECS::EntityManager<TestEnityTrait>* eManager,
-	std::vector<ECS::EntityID> * idList)
+template<typename EMTraits>
+void DeleteEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList)
 {
-	int error = 0;
-	for (ECS::EntityID id : *idList)
+	for (auto id : idList)
 	{
-		if (false == eManager->destoryEntity(id))
-		{
-			++error;
-		}
+		pEntityManager->destoryEntity(id);
 	}
-	idList->clear();
-	return error;
 }
 
-// random allocate entityID, and random delete them.
-inline int testEntityManager(
-	ECS::EntityManager<TestEnityTrait>* pManager,
-	const size_t batchSize = 100,
-	const bool randomPerBatch = false,
-	const size_t loopTime = 20,
-	const size_t randSeed = 1)
+template<typename EMTraits, typename ...COMPONENT_TYPE_LIST>
+void MaskComponent(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList)
 {
-	int error = 0;
-	const size_t maxSize = pManager->getSize();
-	std::vector<ECS::EntityID> idList;
-	std::vector<size_t> randomIndex(maxSize);
-	ECS::EntityID newID(0);
-
-	for (size_t i = 0; i < loopTime; ++i)
+	for (auto id : idList)
 	{
-		// allocate
-		for (size_t batchIndex = 0; batchIndex < std::min(batchSize, maxSize); ++batchIndex)
-		{
-			newID = pManager->newEntity();
-			if (!newID)
-			{// return zero mean the ids have been used out.
-				break;
-			}
-			idList.push_back(newID);
-		}
-
-		// destory the entityID
-		if (randomPerBatch)
-		{
-			RandomTool::Func::Shuffle(randomIndex, i + randSeed);
-		}
-		else
-		{
-			RandomTool::Func::Shuffle(randomIndex, randSeed);
-		}
-
-		for (auto randi : randomIndex)
-		{
-			pManager->destoryEntity(idList[randi]);
-		}
-
-		idList.clear();
-
-		error += NOT_EQ(0, pManager->getUsedIDCount());
+		pEntityManager->maskComponentType<COMPONENT_TYPE_LIST...>(id);
 	}
-
-	return error;
 }
 
+
+
+} // namespace EntityManagerTool
+
+/*
 template<typename ...COMPONENT_TYPES>
 inline int maskIdListWithComponentTypes(
 	ECS::EntityManager<TestEnityTrait>* pManager,
@@ -211,7 +155,7 @@ inline CheckComponentsResult checkMaskResultWithComponentContainer(
 }
 
 inline int randomIdListArray(
-	ECS::EntityManager<TestEnityTrait>* pManager,
+	ECS::EntityManager<TestEntityTraits>* pManager,
 	std::vector<ECS::EntityID>* pTotalIDList,				// all the id are in here.
 	std::vector<std::vector<ECS::EntityID>>* pIdListArray,	// get the dispatched ids
 	const size_t idListArrayCount = 8,
@@ -234,7 +178,7 @@ inline int randomIdListArray(
 	{
 		totalIDCount += size;
 	}
-	error += newEntitis(pManager, pTotalIDList, totalIDCount);
+	EntityManagerTool::NewEntities(pManager, *pTotalIDList, totalIDCount);
 
 	// ready to randomly dispatch all the id to different idList
 	RandomTool::RandomSet<size_t> randomIDDisaptchIndices;
@@ -272,3 +216,5 @@ enum ComponentNumber
 	Float_CharC,
 	Int_Float_CharC = 7
 };
+
+*/
