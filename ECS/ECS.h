@@ -12,7 +12,7 @@ namespace ECS
 static const size_t gMaxComponentTypeCount	= 32;
 
 	// seral key type in the ECS.
-using EntityID			= size_t;
+using EntityID			= std::size_t;
 using ComponentTypeID	= size_t;
 
 // this struct have no memeber, 
