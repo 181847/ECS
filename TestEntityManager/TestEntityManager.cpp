@@ -10,23 +10,26 @@
 
 DECLARE_TEST_UNITS;
 
-#define DeclareEntityManager(managerName)\
-	auto * managerName = ECS::EntityManager<TestEnityTrait>::getInstance()
+
+using TestEntityManager = ECS::EntityManager<TestEntityTraits>;
+using IDList			= std::vector<ECS::EntityID>;
+
+namespace
+{
+	const int TestEntityCount = 100;
+}
+
+#define DECLARE_ENTITY_MANAGER(managerName)\
+	auto * managerName = TestEntityManager::getInstance();\
+	assert(managerName->getUsedIDCount() == 0 && "the test must ensure that the entityManager is empty.")
 
 
 namespace TestUnit
 {
 
+void GetReady(){}
 
-
-void GetReady()
-{
-}
-
-void AfterTest()
-{
-
-}
+void AfterTest(){}
 
 void AddTestUnit()
 {
@@ -37,207 +40,216 @@ void AddTestUnit()
 	TEST_UNIT_END;
 #pragma endregion
 
-#pragma region check IDGenerator's newID() and getID()
-		TEST_UNIT_START("check IDGenerator's newID() and getID()")
-			// a temp struct to create a series id.
-			struct TestIDGenStruct {};
-			using TestIDGen = TypeTool::IDGenerator<TestIDGenStruct>;
+#pragma region check IDGenerator::IDOf()
+	TEST_UNIT_START("check IDGenerator's newID() and getID()")
+		// a temp struct to create a series id.
+		struct TestIDGenStruct {};
+		using TestIDGen = TypeTool::IDGenerator<TestIDGenStruct>;
 
-			// first part, try first newID(), then getID().
-			errorLogger += NOT_EQ(1, TestIDGen::IDOf<int>());
-			errorLogger += NOT_EQ(2, TestIDGen::IDOf<float>());
-			errorLogger += NOT_EQ(1, TestIDGen::IDOf<int>());
-			errorLogger += NOT_EQ(2, TestIDGen::IDOf<float>());
-			
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+		// first part, try first newID(), then getID().
+		errorLogger.LogIfNotEq(1, TestIDGen::IDOf<int>());
+		errorLogger.LogIfNotEq(2, TestIDGen::IDOf<float>());
+		errorLogger.LogIfNotEq(1, TestIDGen::IDOf<int>());
+		errorLogger.LogIfNotEq(2, TestIDGen::IDOf<float>());
+	TEST_UNIT_END;
 #pragma endregion
 
 #pragma region creat EntityManager
 	TEST_UNIT_START("creat EntityManager")
-		int error = 0;
-		/*ECS::EntityManager* eManager = 
-			ECS::EntityManager::getInstance();*/
-
-		DeclareEntityManager(eManager);
+		DECLARE_ENTITY_MANAGER(eManager);
 		
 		ECS::EntityID firstID = eManager->newEntity();
 
-		error += firstID != 1;
-		error += NOT_EQ(1, eManager->getUsedIDCount());
+		errorLogger.LogIfNotEq(firstID, 1);
+
+		errorLogger.LogIfNotEq(1, eManager->getUsedIDCount());
 
 		eManager->destoryEntity(firstID);
 
-		error += NOT_EQ(0, eManager->getUsedIDCount());
-
-		return error == 0;
+		errorLogger.LogIfNotEq(0, eManager->getUsedIDCount());
 	TEST_UNIT_END;
 #pragma endregion
 
-	// test Unit generate ID, and random destroy
-#pragma region
+#pragma region generate ID, and random destroy
 	TEST_UNIT_START("generate ID, and random destroy")
-		int error = 0;
-		DeclareEntityManager(eManager);
-		error += testEntityManager(eManager);
-		error += testEntityManager(eManager, 300, true, 30);
-		return error == 0;
-	TEST_UNIT_END;
-#pragma endregion test Unit generat ID, and random destoried
 
-	// test Unit test checkInvalid EntityID
-#pragma region
-	TEST_UNIT_START("test checkInvalid EntityID")
-		DeclareEntityManager(eManager);
+		DECLARE_ENTITY_MANAGER(eManager);
 
-		// the test must ensure that the entityManager is empty.
-		if (NOT_EQ(0, eManager->getUsedIDCount()))
+		IDList idList;
+		const int TestEntityCount = eManager->getSize();
+
+		for (int i = 0; i < 20; ++i)
 		{
-			return false;
+			// Ensure that the eManager is empty.
+			errorLogger.LogIfNotEq(0, eManager->getUsedIDCount());
+
+			EntityManagerTool::	NewEntities(eManager, idList, TestEntityCount);
+
+			RandomTool::Func::	Shuffle(idList, i);
+
+
+			// Ensure that the eManager no more id left.
+			errorLogger.LogIfNotEq(eManager->getSize(), eManager->getUsedIDCount());
+
+			EntityManagerTool::	DeleteEntities(eManager, idList);
 		}
+
+	TEST_UNIT_END;
+#pragma endregion
+
+#pragma region test checkInvalid EntityID
+	TEST_UNIT_START("test checkInvalid EntityID")
+
+		DECLARE_ENTITY_MANAGER(eManager);
+		
+		const int TestEntityCount = eManager->getSize();
+		const int halfSplit = TestEntityCount / 2;
+
+		IDList idList		(TestEntityCount);
+		IDList validList	(halfSplit);
+		IDList inValidList	(TestEntityCount - halfSplit);
+
+		auto DivideIDsFunc = [&]() 
+		{
+			validList.clear();
+			inValidList.clear();
+
+			for (int i = idList.size() - 1; i >= 0; --i)
+			{
+				if (i < halfSplit)
+				{
+					validList.push_back(idList[i]);
+				}
+				else
+				{
+					inValidList.push_back(idList[i]);
+				}
+			}
+		};
+
+		auto CheckIDValidationFunc = [&](const IDList& list, bool shouldBeValid)
+		{
+			for (auto id : list)
+			{
+				errorLogger.LogIfNotEq(shouldBeValid, eManager->isValid(id));
+			}
+		};
+
+		for (int i = 0; i < 20; ++i)
+		{
+			EntityManagerTool::NewEntities(eManager, idList, TestEntityCount);
+
+			RandomTool::Func::Shuffle(idList, i);
+
+			DivideIDsFunc();
+
+			EntityManagerTool::DeleteEntities(eManager, inValidList);
+
+			CheckIDValidationFunc(validList, true);
+			CheckIDValidationFunc(inValidList, false);
+
+			errorLogger.LogIfNotEq(validList.size(), eManager->getUsedIDCount());
+
+			EntityManagerTool::DeleteEntities(eManager, validList);
+
+			errorLogger.LogIfNotEq(0, eManager->getUsedIDCount());
+		}
+		
+	TEST_UNIT_END;
+#pragma endregion
+
+#pragma region test componentMask use EntityManager
+	TEST_UNIT_START("test componentMask use EntityManager")
+		DECLARE_ENTITY_MANAGER(eManager);
+
+		IDList idList(78);
+		IDList branch1(30);
+		IDList branch2(48);
+		std::vector<int> dummyList0, dummyList1, dummyList2;
+
+		RandomTool::Func::Dispatch(dummyList0, dummyList1, dummyList2);
+
+		/*
+		using MaskResultFlag = ECS::MaskResultFlag;
+		const size_t idCount = 5;
+		const size_t partOneCount = 2;
+		const size_t partTwoCount = idCount - partOneCount;
+
 		std::vector<ECS::EntityID> idList;
-		const size_t entityCount = 500;
-		// new entityID
-		errorLogger += newEntitis(eManager, &idList, entityCount);
+		errorLogger += newEntitis(eManager, &idList, idCount);
 
 		RandomTool::RandomSet<size_t> randomIndices;
 		randomIndices.setSeed(1);
-		// we generate a random indices for the idList from 0 to entityCount - 1
-		randomIndices.RandomSequence(entityCount);
+		randomIndices.RandomSequence(idCount);
 
-		// use an array to indicate the corresponding id in the idList is valid.
-		std::vector<bool> validFlagList(entityCount);
-		for (auto & vFlag : validFlagList)
+		// part one will mask two type of component[IntComponet, FloatComponent].
+		// part two will only mask with IntComponent.
+		for (size_t randomIndexPosition = 0;
+			randomIndexPosition < randomIndices.size();
+			++randomIndexPosition)
 		{
-			vFlag = true;
-		}
-
-		// seperate the idList to two part, 
-		// the first part of the idList 
-		// whose index started from 0 to deletePartCount will be delete.
-		const size_t deletePartCount = 200;
-		std::vector<ECS::EntityID> deletePartIDList;
-
-		for (int dIndex = 0; dIndex < deletePartCount; ++dIndex)
-		{
-			deletePartIDList.push_back(idList[ randomIndices[dIndex] ]);
-			// toggle the flag
-			validFlagList[randomIndices[dIndex]] = false;
-		}
-
-		// delete the seperate entityID
-		errorLogger += destoryEntities(eManager, &deletePartIDList);
-
-		// now here is the main part
-		// iterate all the idList,
-		// check the EntityManager::isValid() is same as deleteFlagList.
-		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-		{
-			errorLogger += NOT_EQ(
-				validFlagList[idIndex], 
-				eManager->isValid(idList[idIndex]));
-		}
-
-		// for clean the entityManager
-		// destory the rest entityID
-		for (size_t idIndex = 0; idIndex < idList.size(); ++idIndex)
-		{
-			if (validFlagList[idIndex])
+			ECS::MaskResult result;
+			if (randomIndexPosition < partOneCount)
 			{
-				errorLogger += NOT_EQ(true, eManager->destoryEntity(idList[idIndex]));
+				result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
+						randomIndices[randomIndexPosition]]);
+				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
+			}
+			else
+			{
+				result = eManager->maskComponentType<IntComponent>(idList[
+					randomIndices[randomIndexPosition]]);
+				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
 			}
 		}
 
+		// part one will append [IntComponent, CharComponent], 
+		//		which result should return Success | RedundancyComponent
+		// part two will only mask with FloatComponent,
+		//		which result should return Success.
+		for (size_t randomIndexPosition = 0;
+			randomIndexPosition < randomIndices.size();
+			++randomIndexPosition)
+		{
+			ECS::MaskResult result;
+			if (randomIndexPosition < partOneCount)
+			{
+				result = eManager->maskComponentType<IntComponent, CharComponent>(idList[
+					randomIndices[randomIndexPosition]]);
+				errorLogger += NOT_EQ(result, MaskResultFlag::Success | MaskResultFlag::RedundancyComponent);
+			}
+			else
+			{
+				result = eManager->maskComponentType<CharComponent>(idList[
+					randomIndices[randomIndexPosition]]);
+				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
+			}
+		}
+
+		errorLogger += destoryEntities(eManager, &idList);
 		return errorLogger.conclusion();
+	*/
 	TEST_UNIT_END;
-#pragma endregion test Unit test checkInvalid EntityID
+#pragma endregion
 
-	// test Unit test componentMask use EntityManager
-#pragma region
-		TEST_UNIT_START("test componentMask use EntityManager")
-			DeclareEntityManager(eManager);
-
-			using MaskResultFlag = ECS::MaskResultFlag;
-			const size_t idCount = 5;
-			const size_t partOneCount = 2;
-			const size_t partTwoCount = idCount - partOneCount;
-
-			std::vector<ECS::EntityID> idList;
-			errorLogger += newEntitis(eManager, &idList, idCount);
-
-			RandomTool::RandomSet<size_t> randomIndices;
-			randomIndices.setSeed(1);
-			randomIndices.RandomSequence(idCount);
-
-			// part one will mask two type of component[IntComponet, FloatComponent].
-			// part two will only mask with IntComponent.
-			for (size_t randomIndexPosition = 0;
-				randomIndexPosition < randomIndices.size();
-				++randomIndexPosition)
-			{
-				ECS::MaskResult result;
-				if (randomIndexPosition < partOneCount)
-				{
-					result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
-							randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-				}
-				else
-				{
-					result = eManager->maskComponentType<IntComponent>(idList[
-						randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-				}
-			}
-
-			// part one will append [IntComponent, CharComponent], 
-			//		which result should return Success | RedundancyComponent
-			// part two will only mask with FloatComponent,
-			//		which result should return Success.
-			for (size_t randomIndexPosition = 0;
-				randomIndexPosition < randomIndices.size();
-				++randomIndexPosition)
-			{
-				ECS::MaskResult result;
-				if (randomIndexPosition < partOneCount)
-				{
-					result = eManager->maskComponentType<IntComponent, CharComponent>(idList[
-						randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success | MaskResultFlag::RedundancyComponent);
-				}
-				else
-				{
-					result = eManager->maskComponentType<CharComponent>(idList[
-						randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-				}
-			}
-
-			errorLogger += destoryEntities(eManager, &idList);
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
-#pragma endregion test Unit test componentMask use EntityManager
-
-	// test Unit get mask of components
-#pragma region
+		/*
+#pragma region get mask of components
 		TEST_UNIT_START("get mask of components")
-			auto mask0010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent>();
-			auto mask1010 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent, CharComponent>();
-			auto mask1100 = ECS::EntityManager<TestEnityTrait>::getComponentMask<CharComponent, FloatComponent>();
-			auto mask1110 = ECS::EntityManager<TestEnityTrait>::getComponentMask<IntComponent, FloatComponent, CharComponent>();
+			auto mask0010 = TestEntityManager::getComponentMask<IntComponent>();
+			auto mask1010 = TestEntityManager::getComponentMask<IntComponent, CharComponent>();
+			auto mask1100 = TestEntityManager::getComponentMask<CharComponent, FloatComponent>();
+			auto mask1110 = TestEntityManager::getComponentMask<IntComponent, FloatComponent, CharComponent>();
 
 			errorLogger += NOT_EQ(mask0010, 2);
 			errorLogger += NOT_EQ(mask1010, 10);
 			errorLogger += NOT_EQ(mask1100, 12);
 			errorLogger += NOT_EQ(mask1110, 14);
-			return errorLogger.conclusion();
 		TEST_UNIT_END;
 #pragma endregion
 
-	// test Unit check componentType of the entity
-#pragma region
+#pragma region check componentType of the entity
 		TEST_UNIT_START("check componentType of the entity")
-			DeclareEntityManager(eManager);
+			DECLARE_ENTITY_MANAGER(eManager);
 
 			using MaskResultFlag = ECS::MaskResultFlag;
 			const size_t idCount = 5;
@@ -303,11 +315,10 @@ void AddTestUnit()
 		TEST_UNIT_END;
 #pragma endregion
 
-	// test Unit get entityIter.
-#pragma region
+#pragma region get entityIter
 		TEST_UNIT_START("get entityIter")
 
-			DeclareEntityManager(eManager);
+			DECLARE_ENTITY_MANAGER(eManager);
 			//auto entIter = eManager->RangeEntities<IntComponent, FloatComponent>();
 			//auto mask = entIter._desirMask;
 			std::vector<ECS::EntityID> idList1;
@@ -346,10 +357,6 @@ void AddTestUnit()
 			errorLogger += NOT_EQ(*be1, idList2[4]);
 			errorLogger += NOT_EQ(*be2, idList4[15]);
 
-			/*for (auto id : range1)
-			{
-				std::cout << "range 1 id: " << id << std::endl;
-			}*/
 
 			errorLogger += destoryEntities(eManager, &idList2);
 			errorLogger += destoryEntities(eManager, &idList4);
@@ -358,10 +365,9 @@ void AddTestUnit()
 		TEST_UNIT_END;
 #pragma endregion
 
-	// test Unit test traverse the entity.
-#pragma region
+#pragma region test traverse the entity.
 		TEST_UNIT_START("test traverse the entity.")
-			DeclareEntityManager(eManager);
+			DECLARE_ENTITY_MANAGER(eManager);
 
 			std::vector<ECS::EntityID> totalIDList;
 			std::vector<std::vector<ECS::EntityID>> idListArray;
@@ -470,6 +476,7 @@ void AddTestUnit()
 			return errorLogger.conclusion();
 		TEST_UNIT_END;
 #pragma endregion
+*/
 }// function void AddTestUnit()
 
 
