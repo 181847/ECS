@@ -50,7 +50,7 @@ public:
 
 	// get rid of the component type's mask from the entity.
 	template<typename ...COMPONENT_TYPES>
-	bool		removeMask(EntityID id);
+	void		removeMask(EntityID id);
 
 	// check if the entity have the component type.
 	template<typename ...COMPONENT_TYPES>
@@ -134,15 +134,13 @@ inline MaskResult EntityManager<Traits>::maskComponentType(EntityID entityID)
 
 template<typename Traits>
 template<typename ...COMPONENT_TYPES>
-inline bool EntityManager<Traits>::removeMask(EntityID id)
+inline void EntityManager<Traits>::removeMask(EntityID id)
 {
 	assert(isValid(id));
 
 	const ComponentMask flippedMask = getComponentMask<COMPONENT_TYPES...>().flip();
 	
 	m_maskPool[id] &= flippedMask;
-
-	return true;
 }
 
 template<typename Traits>
