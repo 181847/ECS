@@ -209,6 +209,117 @@ void AddTestUnit()
 	TEST_UNIT_END;
 #pragma endregion
 
+#pragma region test remove mask
+	TEST_UNIT_START("test componentMask use EntityManager")
+		DECLARE_ENTITY_MANAGER(eManager);
+
+	const int sizeSum = eManager->getSize();
+
+	IDList idList(sizeSum);
+	IDList branch1;
+	IDList branch2;
+
+	for (int i = 0; i < 20; ++i)
+	{
+		idList.resize(sizeSum);
+		branch1.resize(sizeSum * (1 + i) / 21);
+		branch2.resize(sizeSum - branch1.size());
+
+		EntityManagerTool::NewEntities(eManager, idList, idList.size());
+
+		RandomTool::Func::Shuffle(idList, i);
+
+		RandomTool::Func::Dispatch(idList, branch1, branch2);
+
+		EntityManagerTool::MaskComponent<IntComponent>					(eManager, branch1);
+		EntityManagerTool::MaskComponent<IntComponent, FloatComponent>	(eManager, branch2);
+
+		for (auto id : branch1)
+		{
+			errorLogger.LogIfNotEq(true, eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfEq(true, eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfEq(true, eManager->haveComponent<FloatComponent, DoubleComponent>(id));
+		}
+		for (auto id : branch2)
+		{
+			errorLogger.LogIfNotEq(true, eManager->haveComponent<FloatComponent>(id));
+			errorLogger.LogIfNotEq(true, eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfNotEq(true, eManager->haveComponent<IntComponent, FloatComponent>(id));
+
+			errorLogger.LogIfEq(true, eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfEq(true, eManager->haveComponent<CharComponent, FloatComponent>(id));
+			errorLogger.LogIfEq(true, eManager->haveComponent<IntComponent, CharComponent>(id));
+		}
+
+		// remove component mask
+		EntityManagerTool::RemoveMask<IntComponent>		(eManager, branch1);
+		EntityManagerTool::RemoveMask<FloatComponent>	(eManager, branch2);
+
+		for (auto id : branch1)
+		{
+			// the branch1 should have no component.
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<FloatComponent, DoubleComponent>(id));
+		}
+		for (auto id : branch2)
+		{
+			// branch 2 should only have IntComponent.
+			errorLogger.LogIfFalse(eManager->haveComponent<IntComponent>(id));
+
+			errorLogger.LogIfTrue(eManager->haveComponent<FloatComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, CharComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<CharComponent, FloatComponent>(id));
+		}
+
+		// remove the IntComponent from branch2.
+		EntityManagerTool::RemoveMask<IntComponent>(eManager, branch2);
+
+		// check branch2's mask
+		for (auto id : branch2)
+		{
+			// branch 2 should only have IntComponent.
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<FloatComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, CharComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<CharComponent, FloatComponent>(id));
+		}
+
+		// now all the masks have been removed, let's add them again.
+		EntityManagerTool::MaskComponent<IntComponent, CharComponent>(eManager, branch1);
+		EntityManagerTool::MaskComponent<IntComponent, FloatComponent>(eManager, branch2);
+
+		// check the mask.
+		for (auto id : branch1)
+		{
+			errorLogger.LogIfFalse(eManager->haveComponent<IntComponent, CharComponent>(id));
+			errorLogger.LogIfFalse(eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfFalse(eManager->haveComponent<CharComponent>(id));
+
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<FloatComponent, DoubleComponent>(id));
+		}
+		for (auto id : branch2)
+		{
+			errorLogger.LogIfFalse(eManager->haveComponent<IntComponent, FloatComponent>(id));
+			errorLogger.LogIfFalse(eManager->haveComponent<IntComponent>(id));
+			errorLogger.LogIfFalse(eManager->haveComponent<FloatComponent>(id));
+
+			errorLogger.LogIfTrue(eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+			errorLogger.LogIfTrue(eManager->haveComponent<FloatComponent, DoubleComponent>(id));
+		}
+
+		EntityManagerTool::DeleteEntities(eManager, idList);
+	}
+
+
+	TEST_UNIT_END;
+#pragma endregion
+
 #pragma region test traverse the entity.
 	TEST_UNIT_START("test traverse the entity.")
 		DECLARE_ENTITY_MANAGER(eManager);
