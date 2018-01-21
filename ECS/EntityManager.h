@@ -31,6 +31,10 @@ public:
 	// singleton
 	static EntityManager<Traits>* getInstance();
 
+	// Get the combination Mask of the component types.
+	template<typename ...COMPONENT_TYPES>
+	static ComponentMask getComponentMask();
+
 	// get a new Entity and return its ID.
 	EntityID	newEntity();
 
@@ -44,6 +48,10 @@ public:
 	template<typename ...COMPONENT_TYPES>
 	MaskResult	maskComponentType(EntityID entityID);
 
+	// get rid of the component type's mask from the entity.
+	template<typename ...COMPONENT_TYPES>
+	bool		removeMask(EntityID id);
+
 	// check if the entity have the component type.
 	template<typename ...COMPONENT_TYPES>
 	bool		haveComponent(EntityID entityID);
@@ -51,10 +59,6 @@ public:
 	// get the iterator of the entity which should have the specific ComponentType.
 	template<typename ...COMPONENT_TYPES>
 	EntityRange<Traits, COMPONENT_TYPES...>		RangeEntities();
-
-	// Get the combination Mask of the component types.
-	template<typename ...COMPONENT_TYPES>
-	static ComponentMask getComponentMask();
 	
 	size_t getSize() const;
 	size_t getUsedIDCount() const;
@@ -126,6 +130,19 @@ inline MaskResult EntityManager<Traits>::maskComponentType(EntityID entityID)
 	result |= MaskResultFlag::Success;
 
 	return result;
+}
+
+template<typename Traits>
+template<typename ...COMPONENT_TYPES>
+inline bool EntityManager<Traits>::removeMask(EntityID id)
+{
+	assert(isValid(id));
+
+	const ComponentMask flippedMask = getComponentMask<COMPONENT_TYPES...>().flip();
+	
+	m_maskPool[id] &= flippedMask;
+
+	return true;
 }
 
 template<typename Traits>
@@ -204,8 +221,7 @@ EntityID EntityManager<Traits>::newEntity()
 template<typename Traits>
 bool EntityManager<Traits>::destoryEntity(EntityID destoriedID)
 {
-	// the entityID shouldn't be zero.
-	ASSERT(destoriedID != 0);
+	assert(isValid(destoriedID) && "cannot destoried the invalid id.");
 
 	PEntityFreeBlock prev(nullptr), curr(m_freeList);
 	PEntityFreeBlock newBlock = nullptr;
