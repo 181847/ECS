@@ -210,7 +210,7 @@ void AddTestUnit()
 #pragma endregion
 
 #pragma region test remove mask
-	TEST_UNIT_START("test componentMask use EntityManager")
+	TEST_UNIT_START("test remove mask")
 		DECLARE_ENTITY_MANAGER(eManager);
 
 	const int sizeSum = eManager->getSize();
