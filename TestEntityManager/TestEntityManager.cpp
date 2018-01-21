@@ -162,159 +162,54 @@ void AddTestUnit()
 	TEST_UNIT_START("test componentMask use EntityManager")
 		DECLARE_ENTITY_MANAGER(eManager);
 
-		IDList idList(78);
-		IDList branch1(30);
-		IDList branch2(48);
-		std::vector<int> dummyList0, dummyList1, dummyList2;
+		const int sizeSum = eManager->getSize();
 
-		RandomTool::Func::Dispatch(dummyList0, dummyList1, dummyList2);
+		IDList idList(sizeSum);
+		IDList branch1;
+		IDList branch2;
 
-		/*
-		using MaskResultFlag = ECS::MaskResultFlag;
-		const size_t idCount = 5;
-		const size_t partOneCount = 2;
-		const size_t partTwoCount = idCount - partOneCount;
-
-		std::vector<ECS::EntityID> idList;
-		errorLogger += newEntitis(eManager, &idList, idCount);
-
-		RandomTool::RandomSet<size_t> randomIndices;
-		randomIndices.setSeed(1);
-		randomIndices.RandomSequence(idCount);
-
-		// part one will mask two type of component[IntComponet, FloatComponent].
-		// part two will only mask with IntComponent.
-		for (size_t randomIndexPosition = 0;
-			randomIndexPosition < randomIndices.size();
-			++randomIndexPosition)
+		for (int i = 0; i < 20; ++i)
 		{
-			ECS::MaskResult result;
-			if (randomIndexPosition < partOneCount)
-			{
-				result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
-						randomIndices[randomIndexPosition]]);
-				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-			}
-			else
-			{
-				result = eManager->maskComponentType<IntComponent>(idList[
-					randomIndices[randomIndexPosition]]);
-				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-			}
-		}
+			idList.resize(sizeSum);
+			branch1.resize(sizeSum * (1 + i) / 21);
+			branch2.resize(sizeSum - branch1.size());
 
-		// part one will append [IntComponent, CharComponent], 
-		//		which result should return Success | RedundancyComponent
-		// part two will only mask with FloatComponent,
-		//		which result should return Success.
-		for (size_t randomIndexPosition = 0;
-			randomIndexPosition < randomIndices.size();
-			++randomIndexPosition)
-		{
-			ECS::MaskResult result;
-			if (randomIndexPosition < partOneCount)
-			{
-				result = eManager->maskComponentType<IntComponent, CharComponent>(idList[
-					randomIndices[randomIndexPosition]]);
-				errorLogger += NOT_EQ(result, MaskResultFlag::Success | MaskResultFlag::RedundancyComponent);
-			}
-			else
-			{
-				result = eManager->maskComponentType<CharComponent>(idList[
-					randomIndices[randomIndexPosition]]);
-				errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-			}
-		}
+			EntityManagerTool::NewEntities(eManager, idList, idList.size());
 
-		errorLogger += destoryEntities(eManager, &idList);
-		return errorLogger.conclusion();
-	*/
+			RandomTool::Func::Shuffle(idList, i);
+
+			RandomTool::Func::Dispatch(idList, branch1, branch2);
+
+			EntityManagerTool::MaskComponent<IntComponent>(eManager, branch1);
+
+			EntityManagerTool::MaskComponent<IntComponent, FloatComponent>(eManager, branch2);
+
+			for (auto id : branch1)
+			{
+				errorLogger.LogIfNotEq	(true, eManager->haveComponent<IntComponent>(id));
+				errorLogger.LogIfEq		(true, eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+				errorLogger.LogIfEq		(true, eManager->haveComponent<FloatComponent, DoubleComponent>(id));
+			}
+
+			for (auto id : branch2)
+			{
+				errorLogger.LogIfNotEq	(true, eManager->haveComponent<FloatComponent>(id));
+				errorLogger.LogIfNotEq	(true, eManager->haveComponent<IntComponent>(id));
+				errorLogger.LogIfNotEq	(true, eManager->haveComponent<IntComponent, FloatComponent>(id));
+
+				errorLogger.LogIfEq		(true, eManager->haveComponent<IntComponent, FloatComponent, DoubleComponent>(id));
+				errorLogger.LogIfEq		(true, eManager->haveComponent<CharComponent, FloatComponent>(id));
+				errorLogger.LogIfEq		(true, eManager->haveComponent<IntComponent, CharComponent>(id));
+			}
+
+			EntityManagerTool::DeleteEntities(eManager, idList);
+		}
+		
+
 	TEST_UNIT_END;
 #pragma endregion
 
-		/*
-#pragma region get mask of components
-		TEST_UNIT_START("get mask of components")
-			auto mask0010 = TestEntityManager::getComponentMask<IntComponent>();
-			auto mask1010 = TestEntityManager::getComponentMask<IntComponent, CharComponent>();
-			auto mask1100 = TestEntityManager::getComponentMask<CharComponent, FloatComponent>();
-			auto mask1110 = TestEntityManager::getComponentMask<IntComponent, FloatComponent, CharComponent>();
-
-			errorLogger += NOT_EQ(mask0010, 2);
-			errorLogger += NOT_EQ(mask1010, 10);
-			errorLogger += NOT_EQ(mask1100, 12);
-			errorLogger += NOT_EQ(mask1110, 14);
-		TEST_UNIT_END;
-#pragma endregion
-
-#pragma region check componentType of the entity
-		TEST_UNIT_START("check componentType of the entity")
-			DECLARE_ENTITY_MANAGER(eManager);
-
-			using MaskResultFlag = ECS::MaskResultFlag;
-			const size_t idCount = 5;
-			const size_t partOneCount = 2;
-			const size_t partTwoCount = idCount - partOneCount;
-
-			std::vector<ECS::EntityID> idList;
-			errorLogger += newEntitis(eManager, &idList, idCount);
-
-			RandomTool::RandomSet<size_t> randomIndices;
-			randomIndices.setSeed(1);
-			randomIndices.RandomSequence(idCount);
-
-			// part one will mask two type of component[IntComponet, FloatComponent].
-			// part two will only mask with IntComponent.
-			for (size_t randomIndexPosition = 0;
-				randomIndexPosition < randomIndices.size();
-				++randomIndexPosition)
-			{
-				ECS::MaskResult result;
-				if (randomIndexPosition < partOneCount)
-				{
-					result = eManager->maskComponentType<IntComponent, FloatComponent>(idList[
-							randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-				}
-				else
-				{
-					result = eManager->maskComponentType<IntComponent>(idList[
-						randomIndices[randomIndexPosition]]);
-					errorLogger += NOT_EQ(result, MaskResultFlag::Success);
-				}
-			}
-
-			// part one will append [IntComponent, CharComponent], 
-			//		which result should return Success | RedundancyComponent
-			// part two will only mask with FloatComponent,
-			//		which result should return Success.
-			for (size_t randomIndexPosition = 0;
-				randomIndexPosition < randomIndices.size();
-				++randomIndexPosition)
-			{
-				//ECS::EntityID id = idList[randomIndices[randomIndexPosition]];
-				ECS::EntityID id = idList[randomIndices[randomIndexPosition]];
-				if (randomIndexPosition < partOneCount)
-				{
-					bool result = eManager->haveComponent<IntComponent, FloatComponent>(id);
-					errorLogger += NOT_EQ(true, result);
-					result = eManager->haveComponent<IntComponent, FloatComponent, CharComponent>(id);
-					errorLogger += NOT_EQ(false, result);
-				}
-				else
-				{
-					bool result = eManager->haveComponent<IntComponent>(id);
-					errorLogger += NOT_EQ(true, result);
-					result = eManager->haveComponent<IntComponent, FloatComponent>(id);
-					errorLogger += NOT_EQ(false, result);
-				}
-			}
-
-			errorLogger += destoryEntities(eManager, &idList);
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
-#pragma endregion
-
+	/*
 #pragma region get entityIter
 		TEST_UNIT_START("get entityIter")
 
