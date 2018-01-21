@@ -209,169 +209,123 @@ void AddTestUnit()
 	TEST_UNIT_END;
 #pragma endregion
 
-	/*
-#pragma region get entityIter
-		TEST_UNIT_START("get entityIter")
-
-			DECLARE_ENTITY_MANAGER(eManager);
-			//auto entIter = eManager->RangeEntities<IntComponent, FloatComponent>();
-			//auto mask = entIter._desirMask;
-			std::vector<ECS::EntityID> idList1;
-			const size_t idCount1 = 60;
-			std::vector<ECS::EntityID> idList2;
-			const size_t idCount2 = 50;
-			std::vector<ECS::EntityID> idList3;
-			const size_t idCount3 = 60;
-			std::vector<ECS::EntityID> idList4;
-			const size_t idCount4 = 60;
-			newEntitis(eManager, &idList1, idCount1);
-			newEntitis(eManager, &idList2, idCount2);
-			newEntitis(eManager, &idList3, idCount3);
-			newEntitis(eManager, &idList4, idCount4);
-
-			errorLogger += destoryEntities(eManager, &idList1);
-			errorLogger += destoryEntities(eManager, &idList3);
-
-			using MaskFlag = ECS::MaskResultFlag;
-
-			errorLogger.LogIfNotEq(MaskFlag::Success,
-				eManager->maskComponentType<IntComponent, FloatComponent>(idList2[4]));
-
-			errorLogger.LogIfNotEq(MaskFlag::Success,
-				eManager->maskComponentType<IntComponent, FloatComponent>(idList2[8]));
-
-			errorLogger.LogIfNotEq(MaskFlag::Success,
-				eManager->maskComponentType<IntComponent, CharComponent>(idList4[15]));
-
-			auto range1 = eManager->RangeEntities<IntComponent, FloatComponent>();
-			auto range2 = eManager->RangeEntities<IntComponent, CharComponent>();
-
-			auto be1 = range1.begin();
-			auto be2 = range2.begin();
-
-			errorLogger += NOT_EQ(*be1, idList2[4]);
-			errorLogger += NOT_EQ(*be2, idList4[15]);
-
-
-			errorLogger += destoryEntities(eManager, &idList2);
-			errorLogger += destoryEntities(eManager, &idList4);
-
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
-#pragma endregion
-
 #pragma region test traverse the entity.
-		TEST_UNIT_START("test traverse the entity.")
-			DECLARE_ENTITY_MANAGER(eManager);
+	TEST_UNIT_START("test traverse the entity.")
+		DECLARE_ENTITY_MANAGER(eManager);
 
-			std::vector<ECS::EntityID> totalIDList;
-			std::vector<std::vector<ECS::EntityID>> idListArray;
+		const int sizeSum = eManager->getSize();
 
-			errorLogger += randomIdListArray(eManager, &totalIDList, &idListArray);
+		IDList idList(sizeSum);
+		IDList branch1;	// IntComponent
+		IDList branch2;	// IntComponent - FloatComponent
+		IDList branch3;	// IntComponent - FloatComponent - CharComponent
 
-			errorLogger +=
-				maskIdListWithComponentContainer
-				<
-				CMPS<>,
-				CMPS< IntComponent>,
-				CMPS< FloatComponent>,
-				CMPS< CharComponent>,
-				CMPS< IntComponent,		FloatComponent>,
-				CMPS< IntComponent,		CharComponent>,
-				CMPS< FloatComponent,	CharComponent>,
-				CMPS< IntComponent,		FloatComponent,	CharComponent>
-				>
-				(eManager, idListArray);
+		enum {
+			BRANCH_I = 1,
+			BRANCH_I_F,
+			BRANCH_I_F_C
+		};
 
-			
+		// The the index is the entityID, the element is the tags,
+		// 1 -> branch1, 2 -> branch2, 3 -> branch3.
+		std::vector<int> branchTags(sizeSum + 1);	// Add aditional one for mapping id correctly.
 
-			auto autoCheckComponentMask =
-				[&errorLogger, &idListArray](std::vector<size_t> numberList, CheckComponentsResult result)
+		// Helper function to update the tags in the branchTags.
+		auto UpdateBranchTags = [&branchTags, &branch1, &branch2, &branch3]()
+		{
+			for (auto id : branch1)
 			{
-				size_t desiredCount = 0;
-				for (auto number : numberList)
-				{
-					desiredCount += idListArray[number].size();
-				}
-				errorLogger += result.error;
-				errorLogger.LogIfNotEq(result.count, desiredCount);
-			};
+				branchTags[id] = BRANCH_I;
+			}
+			for (auto id : branch2)
+			{
+				branchTags[id] = BRANCH_I_F;
+			}
+			for (auto id : branch3)
+			{
+				branchTags[id] = BRANCH_I_F_C;
+			}
+		};
 
-			// check all the entity that have IntComponent.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::IntC,
-				ComponentNumber::Int_FloatC,
-				ComponentNumber::Int_CharC,
-				ComponentNumber::Int_Float_CharC 
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<IntComponent>>(eManager));
+		for (int i = 0; i < 20; ++i)
+		{
+			branch1.resize(sizeSum * (i + 1) / (20 * 2));
+			branch2.resize(sizeSum * (i + 1) / (20 * 3));
+			branch3.resize(sizeSum - branch1.size() - branch2.size());
 
-			// check all the entity that have FloatComponent.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::FloatC,
-				ComponentNumber::Int_FloatC,
-				ComponentNumber::Float_CharC,
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<FloatComponent>>(eManager));
+			EntityManagerTool::NewEntities(eManager, idList, idList.size());
 
-			// check all the entity that have CharComponent.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::CharC,
-				ComponentNumber::Int_CharC,
-				ComponentNumber::Float_CharC,
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<CharComponent>>(eManager));
+			RandomTool::Func::Shuffle(idList, i);
 
-			// check all the entity that have Int and Float Component.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::Int_FloatC,
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<IntComponent, FloatComponent>>(eManager));
-			
+			RandomTool::Func::Dispatch(idList, branch1, branch2, branch3);
 
-			// check all the entity that have Int and Char Component.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::Int_CharC,
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<IntComponent, CharComponent>>(eManager));
+			EntityManagerTool::MaskComponent<IntComponent>									(eManager, branch1);
+			EntityManagerTool::MaskComponent<IntComponent, FloatComponent>					(eManager, branch2);
+			EntityManagerTool::MaskComponent<IntComponent, FloatComponent, CharComponent>	(eManager, branch3);
 
-			// check all the entity that have Float and Char Component.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::Float_CharC,
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<FloatComponent, CharComponent>>(eManager));
+			UpdateBranchTags();
 
-			// check all the entity that have Float and Char Component.
-			autoCheckComponentMask(
-				{
-				ComponentNumber::Int_Float_CharC
-				},
-				checkMaskResultWithComponentContainer
-				<CMPS<IntComponent, FloatComponent, CharComponent>>(eManager));
+			// Next several for loop is to traverse the entityID by assigning the ComponentType,
+			// then check whether the id have the ComponentType,
+			// and whether the id is in the correct branch,
+			// for example, if the entity have IntComponent, 
+			// it must be in the BRANCH_I or BRANCH_I_F or BRANCH_I_F_C (the 'I' stantds for the IntComponent),
 
-			destoryEntities(eManager, &totalIDList);
-			
-			return errorLogger.conclusion();
-		TEST_UNIT_END;
+			for (auto id : eManager->RangeEntities<IntComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<IntComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I || branchTags[id] == BRANCH_I_F || branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<FloatComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<FloatComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F || branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<CharComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<CharComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<IntComponent, FloatComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<IntComponent, FloatComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F || branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<FloatComponent, CharComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<FloatComponent, CharComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<IntComponent, CharComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<IntComponent, CharComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F_C);
+			}
+
+			for (auto id : eManager->RangeEntities<IntComponent, FloatComponent, CharComponent>())
+			{
+				errorLogger
+					.LogIfFalse(eManager->haveComponent<IntComponent, FloatComponent, CharComponent>(id))
+					.LogIfFalse(branchTags[id] == BRANCH_I_F_C);
+			}
+
+			// delete all ids.
+			EntityManagerTool::DeleteEntities(eManager, idList);
+		}
+	TEST_UNIT_END;
 #pragma endregion
-*/
+
 }// function void AddTestUnit()
 
 
