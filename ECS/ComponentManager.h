@@ -78,12 +78,11 @@ inline ComponentManager<COMPONENT_TYPE>::ComponentManager(const size_t maxSize)
 template<typename COMPONENT_TYPE>
 inline ComponentManager<COMPONENT_TYPE>::~ComponentManager()
 {
+	// Empty
 }
 
 template<typename COMPONENT_TYPE>
-inline COMPONENT_TYPE * 
-ComponentManager<COMPONENT_TYPE>::getComponent
-(EntityID entityID)
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::getComponent(EntityID entityID)
 {
 	auto iterCmp = m_lookUpTable.find(entityID);
 	if (iterCmp == m_lookUpTable.end())
@@ -106,19 +105,15 @@ template<typename COMPONENT_TYPE>
 inline bool ComponentManager<COMPONENT_TYPE>::removeComponent(EntityID removedID)
 {
 	auto iterCmp = m_lookUpTable.find(removedID);
-	if (iterCmp == m_lookUpTable.end())
-	{
-		return false;
-	}
-	else
-	{
-		// delete the pointer.
-		delete iterCmp->second;
-		// erase it from the map
-		m_lookUpTable.erase(iterCmp);
-		--m_usedComponentCount;
-		return true;
-	}
+
+	assert(iterCmp != m_lookUpTable.end() && "trying to remove an unexist component");
+
+	// delete the pointer.
+	delete iterCmp->second;
+	// erase it from the map
+	m_lookUpTable.erase(iterCmp);
+	--m_usedComponentCount;
+	return true;
 }
 
 template<typename COMPONENT_TYPE>
@@ -135,10 +130,7 @@ inline size_t ComponentManager<COMPONENT_TYPE>::getUsedCount() const
 
 template<typename COMPONENT_TYPE>
 template<typename ...CONSTRUCT_ARGS>
-inline COMPONENT_TYPE * 
-ComponentManager<COMPONENT_TYPE>::
-newComponnet
-(EntityID entityID, CONSTRUCT_ARGS&&...args)
+inline COMPONENT_TYPE * ComponentManager<COMPONENT_TYPE>::newComponnet(EntityID entityID, CONSTRUCT_ARGS&&...args)
 {
 	// Prevent from creating the component with the same entityID.
 	assert(nullptr == this->getComponent(entityID));
