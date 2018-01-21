@@ -82,10 +82,13 @@ private:
 	// when it is deconstructed, set the s_isLocked to te false.
 	// Prevent from doing some work inside the Foreach or ForOne,
 	// such cannot Detach a component from the entity inside a Foreach operation.
-	struct StaicLockGuard
+	struct StaticLockGuard
 	{
-		StaicLockGuard();
-		~StaicLockGuard();
+		StaticLockGuard();
+		~StaticLockGuard();
+
+		StaticLockGuard(const StaticLockGuard&) = delete;
+		StaticLockGuard& operator = (const StaticLockGuard&) = delete;
 	};
 };
 
@@ -109,7 +112,7 @@ inline void ECSWorld<EntityManagerTraits, ComponentType...>::Foreach(std::functi
 	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
 		"Exist not supported component type");
 
-	StaicLockGuard avoidConfliction;
+	StaticLockGuard avoidConfliction;
 
 	for (EntityID  id : s_pEntityManager->RangeEntities<COMPONENT_TYPE_LIST...>())
 	{
@@ -124,7 +127,7 @@ inline bool ECSWorld<EntityManagerTraits, ComponentType...>::ForOne(EntityID id,
 	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
 		"Exist not supported component type");
 
-	StaicLockGuard avoidConfliction;
+	StaticLockGuard avoidConfliction;
 
 	if ( ! s_pEntityManager->isValid(id))
 	{
@@ -144,7 +147,7 @@ inline bool ECSWorld<EntityManagerTraits, ComponentType...>::AttachTo(EntityID t
 	static_assert(CheckTypeSupported<COMPONENT_TYPE>::value,
 		"Not supported component type");
 
-	StaicLockGuard avoidConfliction;
+	StaticLockGuard avoidConfliction;
 
 	assert(s_pEntityManager->isValid(targetID) && 
 		"The entity you are operated on is invalid.");
@@ -171,7 +174,7 @@ inline bool ECSWorld<EntityManagerTraits, ComponentType...>::DetachFrom(EntityID
 	static_assert(CheckTypeSupported<COMPONENT_TYPE_LIST...>::value,
 		"Not supported component type");
 
-	StaicLockGuard avoidConfliction;
+	StaticLockGuard avoidConfliction;
 
 	assert(s_pEntityManager->isValid(targetID) &&
 		"The entity you are operated on is invalid.");
@@ -231,7 +234,7 @@ inline COMPONENT_TYPE * ECSWorld<EntityManagerTraits, ComponentType...>::getComp
 template<typename EntityManagerTraits, typename ...ComponentType>
 inline EntityID ECSWorld<EntityManagerTraits, ComponentType...>::NewEntity()
 {
-	StaicLockGuard avoidConfliction;
+	StaticLockGuard avoidConfliction;
 
 	return s_pEntityManager->newEntity();
 }
@@ -239,7 +242,7 @@ inline EntityID ECSWorld<EntityManagerTraits, ComponentType...>::NewEntity()
 #pragma endregion
 
 template<typename EntityManagerTraits, typename ...ComponentType>
-inline ECSWorld<EntityManagerTraits, ComponentType...>::StaicLockGuard::StaicLockGuard()
+inline ECSWorld<EntityManagerTraits, ComponentType...>::StaticLockGuard::StaticLockGuard()
 {
 	assert(ECSWorldAlias::s_isLocked == false && "Confiction happend, other operation is accessing the ECSWorld.");
 	// set lock.
@@ -247,7 +250,7 @@ inline ECSWorld<EntityManagerTraits, ComponentType...>::StaicLockGuard::StaicLoc
 }
 
 template<typename EntityManagerTraits, typename ...ComponentType>
-inline ECSWorld<EntityManagerTraits, ComponentType...>::StaicLockGuard::~StaicLockGuard()
+inline ECSWorld<EntityManagerTraits, ComponentType...>::StaticLockGuard::~StaticLockGuard()
 {
 	// free the lock.
 	ECSWorldAlias::s_isLocked = false;
