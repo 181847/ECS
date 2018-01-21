@@ -25,6 +25,8 @@ void DeleteEntities(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<EC
 template<typename ...COMPONENT_TYPE_LIST, typename EMTraits>
 void MaskComponent(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
 
+template<typename ...COMPONENT_TYPE_LIST, typename EMTraits>
+void RemoveMask(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList);
 
 
 template<typename EMTraits>
@@ -53,6 +55,15 @@ void MaskComponent(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS
 	for (auto id : idList)
 	{
 		pEntityManager->maskComponentType<COMPONENT_TYPE_LIST...>(id);
+	}
+}
+
+template<typename ...COMPONENT_TYPE_LIST, typename EMTraits>
+void RemoveMask(ECS::EntityManager<EMTraits>* pEntityManager, std::vector<ECS::EntityID>& idList)
+{
+	for (auto id : idList)
+	{
+		pEntityManager->removeMask<COMPONENT_TYPE_LIST...>(id);
 	}
 }
 
