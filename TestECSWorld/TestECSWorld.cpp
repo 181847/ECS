@@ -77,6 +77,16 @@ void AddTestUnit()
 		errorLogger.LogIfNotEq(true, testECSWorld.DoHas<IntComponent>(theFirstID));
 		errorLogger.LogIfNotEq(false, testECSWorld.DoHas<FloatComponent>(theFirstID));
 
+		// detach the IntComponent.
+		errorLogger.LogIfFalse(testECSWorld.DetachFrom<IntComponent>(theFirstID));
+
+		// now there is no entity that have IntComponent, 
+		// if correctly, next lambda should never be called, 
+		// and the errorLogger will not increase any error count.
+		testECSWorld.Foreach<IntComponent>([&errorLogger](auto id, auto * pInt)
+		{
+			errorLogger++;
+		});
 		return errorLogger.conclusion();
 	TEST_UNIT_END;
 #pragma endregion
